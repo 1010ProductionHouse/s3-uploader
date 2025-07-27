@@ -1,47 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Upload Files</title>
-  <script src="https://releases.transloadit.com/uppy/v3.21.1/uppy.min.js"></script>
-  <link href="https://releases.transloadit.com/uppy/v3.21.1/uppy.min.css" rel="stylesheet">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 40px;
-      background: #f4f4f4;
-    }
-    #drag-drop-area {
-      max-width: 800px;
-      margin: 0 auto;
-      background: white;
-      padding: 40px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <title>S3 File Upload</title>
+  <script src="https://releases.transloadit.com/uppy/v3.9.0/uppy.min.js"></script>
+  <link href="https://releases.transloadit.com/uppy/v3.9.0/uppy.min.css" rel="stylesheet">
 </head>
 <body>
-  <h1>Upload Files to Your Project Folder</h1>
+  <h2 style="font-family:sans-serif;">Upload Files to Your Project Folder</h2>
   <div id="drag-drop-area"></div>
+
   <script>
-    const uppy = new Uppy.Core()
-      .use(Uppy.Dashboard, {
-        inline: true,
-        target: '#drag-drop-area',
-        note: 'Only your assigned files will be visible after login.',
-      })
-      .use(Uppy.XHRUpload, {
-        endpoint: 'https://your-api-gateway-url/upload',
-        method: 'PUT',
-        headers: {
-          'x-username': 'testuser' // placeholder – we will make this dynamic later
-        }
-      });
+    const uppy = new Uppy.Core({
+      restrictions: { maxFileSize: null, maxNumberOfFiles: 10 },
+      autoProceed: true
+    })
+
+    uppy.use(Uppy.Dashboard, {
+      inline: true,
+      target: '#drag-drop-area',
+      note: 'Up to 10 files at once',
+      proudlyDisplayPoweredByUppy: false
+    })
+
+    uppy.use(Uppy.XHRUpload, {
+      endpoint: 'https://your-api-gateway-url/upload', // Replace this soon
+      fieldName: 'file',
+      bundle: false
+    })
 
     uppy.on('complete', (result) => {
-      console.log('Upload complete! Files uploaded:', result.successful)
-    });
+      console.log('Upload complete! We’ve uploaded these files:', result.successful)
+      alert('Files uploaded successfully!')
+    })
   </script>
 </body>
 </html>
