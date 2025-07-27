@@ -2,35 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>S3 File Upload</title>
-  <script src="https://releases.transloadit.com/uppy/v3.9.0/uppy.min.js"></script>
+  <title>Upload Files</title>
   <link href="https://releases.transloadit.com/uppy/v3.9.0/uppy.min.css" rel="stylesheet">
 </head>
 <body>
   <h2 style="font-family:sans-serif;">Upload Files to Your Project Folder</h2>
-  <div id="drag-drop-area"></div>
+  <div id="uppy-dashboard"></div>
 
+  <script src="https://releases.transloadit.com/uppy/v3.9.0/uppy.min.js"></script>
   <script>
     const uppy = new Uppy.Core({
-      restrictions: { maxFileSize: null, maxNumberOfFiles: 10 },
-      autoProceed: true
+      restrictions: {
+        maxNumberOfFiles: 10
+      },
+      autoProceed: false
     })
 
     uppy.use(Uppy.Dashboard, {
       inline: true,
-      target: '#drag-drop-area',
-      note: 'Up to 10 files at once',
+      target: '#uppy-dashboard',
+      note: 'Drag and drop files here',
       proudlyDisplayPoweredByUppy: false
     })
 
     uppy.use(Uppy.XHRUpload, {
-      endpoint: 'https://your-api-gateway-url/upload', // Replace this soon
-      fieldName: 'file',
-      bundle: false
+      endpoint: 'https://httpbin.org/post', // Dummy endpoint for now
+      fieldName: 'file'
     })
 
     uppy.on('complete', (result) => {
-      console.log('Upload complete! We’ve uploaded these files:', result.successful)
+      console.log('Upload complete:', result.successful)
       alert('Files uploaded successfully!')
     })
   </script>
