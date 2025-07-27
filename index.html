@@ -2,37 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Upload Files</title>
-  <link href="https://releases.transloadit.com/uppy/v3.9.0/uppy.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload Files to Your Project Folder</title>
+  <!-- Uppy CSS -->
+  <link href="https://releases.transloadit.com/uppy/v3.12.0/uppy.min.css" rel="stylesheet">
 </head>
 <body>
-  <h2 style="font-family:sans-serif;">Upload Files to Your Project Folder</h2>
-  <div id="uppy-dashboard"></div>
+  <h1 style="text-align: center;">Upload Files to Your Project Folder</h1>
+  <div id="drag-drop-area" style="max-width: 600px; margin: 0 auto;"></div>
 
-  <script src="https://releases.transloadit.com/uppy/v3.9.0/uppy.min.js"></script>
+  <!-- Uppy JS -->
+  <script src="https://releases.transloadit.com/uppy/v3.12.0/uppy.min.js"></script>
   <script>
     const uppy = new Uppy.Core({
-      restrictions: {
-        maxNumberOfFiles: 10
-      },
+      restrictions: { maxNumberOfFiles: 10 },
       autoProceed: false
     })
 
     uppy.use(Uppy.Dashboard, {
       inline: true,
-      target: '#uppy-dashboard',
-      note: 'Drag and drop files here',
+      target: '#drag-drop-area',
+      note: 'Upload your project files here. Max: 10 files.',
       proudlyDisplayPoweredByUppy: false
-    })
-
-    uppy.use(Uppy.XHRUpload, {
-      endpoint: 'https://httpbin.org/post', // Dummy endpoint for now
-      fieldName: 'file'
-    })
-
-    uppy.on('complete', (result) => {
-      console.log('Upload complete:', result.successful)
-      alert('Files uploaded successfully!')
     })
   </script>
 </body>
