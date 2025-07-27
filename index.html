@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Files</title>
+  <script src="https://releases.transloadit.com/uppy/v3.21.1/uppy.min.js"></script>
+  <link href="https://releases.transloadit.com/uppy/v3.21.1/uppy.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background: #f4f4f4;
+    }
+    #drag-drop-area {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>Upload Files to Your Project Folder</h1>
+  <div id="drag-drop-area"></div>
+  <script>
+    const uppy = new Uppy.Core()
+      .use(Uppy.Dashboard, {
+        inline: true,
+        target: '#drag-drop-area',
+        note: 'Only your assigned files will be visible after login.',
+      })
+      .use(Uppy.XHRUpload, {
+        endpoint: 'https://your-api-gateway-url/upload',
+        method: 'PUT',
+        headers: {
+          'x-username': 'testuser' // placeholder – we will make this dynamic later
+        }
+      });
+
+    uppy.on('complete', (result) => {
+      console.log('Upload complete! Files uploaded:', result.successful)
+    });
+  </script>
+</body>
+</html>
