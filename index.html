@@ -1,32 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>Upload Files to Your Project Folder</title>
-  <link href="https://releases.transloadit.com/uppy/v3.19.2/uppy.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://releases.transloadit.com/uppy/v3.19.2/uppy.min.css">
   <script src="https://releases.transloadit.com/uppy/v3.19.2/uppy.min.js"></script>
-  <!-- Uppy CSS -->
-  <link href="https://releases.transloadit.com/uppy/v3.12.0/uppy.min.css" rel="stylesheet">
 </head>
 <body>
-  <h1 style="text-align: center;">Upload Files to Your Project Folder</h1>
-  <div id="drag-drop-area" style="max-width: 600px; margin: 0 auto;"></div>
+  <h2 style="text-align: center;">Upload Files to Your Project Folder</h2>
+  <div id="uppy"></div>
 
-  <!-- Uppy JS -->
-  <script src="https://releases.transloadit.com/uppy/v3.12.0/uppy.min.js"></script>
   <script>
-    const uppy = new Uppy({
-      restrictions: { maxNumberOfFiles: 10 },
+    const uppy = new Uppy.Uppy({
+      restrictions: {
+        maxFileSize: null,
+        maxNumberOfFiles: 20,
+        allowedFileTypes: null
+      },
       autoProceed: false
-    })
+    });
 
     uppy.use(Uppy.Dashboard, {
       inline: true,
-      target: '#drag-drop-area',
-      note: 'Upload your project files here. Max: 10 files.',
-      proudlyDisplayPoweredByUppy: false
-    })
+      target: '#uppy',
+      proudlyDisplayPoweredByUppy: false,
+      showProgressDetails: true
+    });
+
+    uppy.use(Uppy.XHRUpload, {
+      endpoint: 'https://your-api-gateway-or-lambda-url.com/presigned-url', // Replace this
+      method: 'POST',
+      formData: true,
+      fieldName: 'file'
+    });
+
+    uppy.on('complete', (result) => {
+      console.log('Upload complete! Files uploaded:', result.successful);
+      alert('Upload successful!');
+    });
   </script>
 </body>
 </html>
