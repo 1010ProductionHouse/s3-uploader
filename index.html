@@ -1,43 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Upload Files to Your Project Folder</title>
-  <link rel="stylesheet" href="https://releases.transloadit.com/uppy/v3.19.2/uppy.min.css">
-  <script src="https://releases.transloadit.com/uppy/v3.19.2/uppy.min.js"></script>
+
+  <!-- Uppy CSS -->
+  <link
+    href="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.css"
+    rel="stylesheet"
+  />
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background-color: #f8f9fa;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    #drag-drop-area {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+  </style>
 </head>
 <body>
-  <h2 style="text-align: center;">Upload Files to Your Project Folder</h2>
-  <div id="uppy"></div>
 
-  <script>
-    const uppy = new Uppy.Uppy({
+  <h1>Upload Files to Your Project Folder</h1>
+  <div id="drag-drop-area"></div>
+
+  <!-- Uppy JS (ES Module Version) -->
+  <script type="module">
+    import {
+      Uppy,
+      DragDrop,
+      XHRUpload
+    } from 'https://releases.transloadit.com/uppy/v3.13.0/uppy.min.mjs'
+
+    const uppy = new Uppy({
       restrictions: {
-        maxFileSize: null,
-        maxNumberOfFiles: 20,
-        allowedFileTypes: null
+        maxNumberOfFiles: 10
       },
       autoProceed: false
-    });
+    })
 
-    uppy.use(Uppy.Dashboard, {
-      inline: true,
-      target: '#uppy',
-      proudlyDisplayPoweredByUppy: false,
-      showProgressDetails: true
-    });
+    uppy.use(DragDrop, { target: '#drag-drop-area' })
 
-    uppy.use(Uppy.XHRUpload, {
-      endpoint: 'https://your-api-gateway-or-lambda-url.com/presigned-url', // Replace this
-      method: 'POST',
+    uppy.use(XHRUpload, {
+      endpoint: 'https://your-api-gateway-or-lambda-url/upload', // Replace with your real pre-signed URL endpoint
       formData: true,
       fieldName: 'file'
-    });
+    })
 
     uppy.on('complete', (result) => {
-      console.log('Upload complete! Files uploaded:', result.successful);
-      alert('Upload successful!');
-    });
+      alert('Upload complete!')
+      console.log('Uploaded files:', result.successful)
+    })
   </script>
+
 </body>
 </html>
