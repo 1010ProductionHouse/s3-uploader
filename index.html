@@ -3,18 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>10|10 Admin File Uploader</title>
+  <title>10|10 File Uploader – Admin</title>
   <script src="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.js"></script>
   <link href="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.css" rel="stylesheet">
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     #status { margin-top: 15px; font-weight: bold; }
+    #upload-btn {
+      padding: 10px 20px;
+      margin-top: 20px;
+      font-size: 16px;
+      background-color: #333;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #upload-btn:disabled {
+      background-color: #888;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
 
   <h1>Upload Files to Admin Folder</h1>
   <div id="drag-drop-area"></div>
+  <button id="upload-btn">Upload</button>
   <div id="status"></div>
 
   <script>
@@ -28,21 +42,21 @@
 
     const uppy = new Uppy.Core({
       restrictions: { maxNumberOfFiles: 5 },
-      autoProceed: false // prevent automatic uploads
+      autoProceed: false
     });
 
     uppy.use(Uppy.DragDrop, { target: '#drag-drop-area' });
-    uppy.use(Uppy.StatusBar, {
-      target: 'body',
-      showProgressDetails: true,
-      hideUploadButton: false,
-      hideAfterFinish: false
-    });
 
-    // Custom upload logic
-    uppy.on('upload', async () => {
+    // NOTE: We DO NOT call uppy.upload() or use any internal upload plugins like XHRUpload
+
+    document.getElementById('upload-btn').addEventListener('click', async () => {
       const files = uppy.getFiles();
       const username = getUsername();
+
+      if (files.length === 0) {
+        displayStatus('❌ No files selected', true);
+        return;
+      }
 
       for (const file of files) {
         try {
@@ -63,7 +77,7 @@
 
           const { url: presignedUrl } = await lambdaRes.json();
 
-          // Step 2: Upload to S3 via PUT
+          // Step 2: Upload to S3
           const s3Res = await fetch(presignedUrl, {
             method: 'PUT',
             headers: { 'Content-Type': file.type },
