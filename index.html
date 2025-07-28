@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>10|10 File Uploader – Admin</title>
-  <!-- ✅ FIXED: Using Uppy bundle that exposes global Uppy -->
-  <script src="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.bundle.js"></script>
+  <!-- ✅ Using correct Uppy global bundle -->
+  <script src="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.js"></script>
   <link href="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.css" rel="stylesheet">
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
@@ -41,8 +41,8 @@
       status.style.color = isError ? 'red' : 'green';
     };
 
-    // ✅ Constructor now available globally from bundle.min.js
-    const uppy = new Uppy({
+    // ✅ Use the global Uppy constructor via Uppy.Uppy
+    const uppy = new Uppy.Uppy({
       restrictions: { maxNumberOfFiles: 5 },
       autoProceed: false
     });
