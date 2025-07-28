@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Upload Files to Your Project Folder</title>
 
-  <link href="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.css" rel="stylesheet" />
+  <!-- Uppy CSS -->
+  <link
+    href="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.css"
+    rel="stylesheet"
+  />
 
   <style>
     body {
@@ -19,72 +23,79 @@
     }
     #drag-drop-area {
       max-width: 600px;
+      margin: 0 auto 20px;
+    }
+    #status-bar {
+      max-width: 600px;
       margin: 0 auto;
     }
   </style>
 </head>
 <body>
 
-<h1>Upload Files to Your Project Folder</h1>
-<div id="drag-drop-area"></div>
+  <h1>Upload Files to Your Project Folder</h1>
+  <div id="drag-drop-area"></div>
+  <div id="status-bar"></div>
 
-<script type="module">
-  import {
-    Uppy,
-    DragDrop,
-    StatusBar
-  } from 'https://releases.transloadit.com/uppy/v3.13.0/uppy.min.mjs'
+  <!-- Uppy JS -->
+  <script type="module">
+    import {
+      Uppy,
+      DragDrop,
+      StatusBar
+    } from 'https://releases.transloadit.com/uppy/v3.13.0/uppy.min.mjs'
 
-  const uppy = new Uppy({
-    restrictions: { maxNumberOfFiles: 10 },
-    autoProceed: true
-  })
+    const uppy = new Uppy({
+      restrictions: { maxNumberOfFiles: 10 },
+      autoProceed: true
+    })
 
-  uppy.use(DragDrop, { target: '#drag-drop-area' })
-  uppy.use(StatusBar, {
-    target: 'body',
-    showProgressDetails: true,
-    hideUploadButton: true,
-    hideRetryButton: true,
-    hidePauseResumeButton: true
-  })
+    uppy.use(DragDrop, { target: '#drag-drop-area' })
 
-  uppy.on('file-added', async (file) => {
-    const username = "Admin"  // later: make dynamic
-    const filename = file.name
+    uppy.use(StatusBar, {
+      target: '#status-bar',
+      showProgressDetails: true,
+      hideUploadButton: true,
+      hideRetryButton: false,
+      hidePauseResumeButton: false
+    })
 
-    try {
-      const res = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, filename })
-      })
+    uppy.on('file-added', async (file) => {
+      const username = "Admin"  // Replace with dynamic username later
+      const filename = file.name
 
-      const data = await res.json()
-      if (!res.ok || !data.url) throw new Error(data.error || 'Failed to get signed URL')
+      try {
+        const presignRes = await fetch(
+          'https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, filename })
+          }
+        )
 
-      const uploadUrl = data.url
-      const uploadRes = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': file.type
-        },
-        body: file.data
-      })
+        const data = await presignRes.json()
+        if (!presignRes.ok || !data.url) throw new Error(data.error || 'Failed to get signed URL')
 
-      if (uploadRes.ok) {
-        uppy.info(`Upload complete: ${file.name}`, 'success', 5000)
-        console.log("Uploaded:", file.name)
-      } else {
-        uppy.info(`Upload failed: ${file.name}`, 'error', 5000)
-        console.error("Upload failed:", uploadRes)
+        const uploadRes = await fetch(data.url, {
+          method: 'PUT',
+          headers: { 'Content-Type': file.type },
+          body: file.data
+        })
+
+        if (uploadRes.ok) {
+          uppy.info(`Upload complete: ${file.name}`, 'success', 5000)
+          uppy.emit('upload-success', file, { url: data.url })
+        } else {
+          uppy.info(`Upload failed: ${file.name}`, 'error', 5000)
+          uppy.emit('upload-error', file, new Error('Upload failed'))
+        }
+      } catch (err) {
+        uppy.info(`Upload error: ${file.name}`, 'error', 5000)
+        uppy.emit('upload-error', file, err)
       }
-    } catch (err) {
-      uppy.info(`Upload error: ${file.name}`, 'error', 5000)
-      console.error("Error during upload:", err)
-    }
-  })
-</script>
+    })
+  </script>
 
 </body>
 </html>
