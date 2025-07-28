@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>10|10 File Uploader – Admin</title>
+  <title>10|10 Admin File Uploader</title>
   <script src="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.js"></script>
   <link href="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.css" rel="stylesheet">
   <style>
@@ -18,7 +18,6 @@
   <div id="status"></div>
 
   <script>
-    // If needed in future, extract from ?u=username
     const getUsername = () => 'Admin';
 
     const displayStatus = (message, isError = false) => {
@@ -29,53 +28,58 @@
 
     const uppy = new Uppy.Core({
       restrictions: { maxNumberOfFiles: 5 },
-      autoProceed: true
+      autoProceed: false // prevent automatic uploads
     });
 
     uppy.use(Uppy.DragDrop, { target: '#drag-drop-area' });
     uppy.use(Uppy.StatusBar, {
       target: 'body',
       showProgressDetails: true,
-      hideUploadButton: true,
+      hideUploadButton: false,
       hideAfterFinish: false
     });
 
-    uppy.on('file-added', async (file) => {
+    // Custom upload logic
+    uppy.on('upload', async () => {
+      const files = uppy.getFiles();
       const username = getUsername();
-      try {
-        // Step 1: Fetch pre-signed URL from Lambda
-        const lambdaRes = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: username,
-            filename: file.name
-          })
-        });
 
-        if (!lambdaRes.ok) {
-          const errorText = await lambdaRes.text();
-          throw new Error(`Lambda error: ${errorText}`);
+      for (const file of files) {
+        try {
+          // Step 1: Get pre-signed URL from Lambda
+          const lambdaRes = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: username,
+              filename: file.name
+            })
+          });
+
+          if (!lambdaRes.ok) {
+            const errorText = await lambdaRes.text();
+            throw new Error(`Lambda error: ${errorText}`);
+          }
+
+          const { url: presignedUrl } = await lambdaRes.json();
+
+          // Step 2: Upload to S3 via PUT
+          const s3Res = await fetch(presignedUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': file.type },
+            body: file.data
+          });
+
+          if (!s3Res.ok) {
+            const errMsg = await s3Res.text();
+            throw new Error(`S3 upload failed: ${errMsg}`);
+          }
+
+          displayStatus(`✅ Upload successful: ${file.name}`);
+        } catch (err) {
+          console.error(err);
+          displayStatus(`❌ Upload failed: ${file.name}`, true);
         }
-
-        const { url: presignedUrl } = await lambdaRes.json();
-
-        // Step 2: Upload file to S3
-        const s3Res = await fetch(presignedUrl, {
-          method: 'PUT',
-          headers: { 'Content-Type': file.type },
-          body: file.data
-        });
-
-        if (!s3Res.ok) {
-          const errMsg = await s3Res.text();
-          throw new Error(`S3 upload failed: ${errMsg}`);
-        }
-
-        displayStatus(`✅ Upload successful: ${file.name}`);
-      } catch (err) {
-        console.error(err);
-        displayStatus(`❌ Upload failed: ${file.name}`, true);
       }
     });
   </script>
