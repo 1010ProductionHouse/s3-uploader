@@ -50,7 +50,7 @@
   })
 
   uppy.on('file-added', async (file) => {
-    const username = "Admin" // Later: make dynamic
+    const username = "Admin"  // later: make dynamic
     const filename = file.name
 
     try {
@@ -61,24 +61,27 @@
       })
 
       const data = await res.json()
-      const uploadUrl = data.url
+      if (!res.ok || !data.url) throw new Error(data.error || 'Failed to get signed URL')
 
+      const uploadUrl = data.url
       const uploadRes = await fetch(uploadUrl, {
         method: 'PUT',
-        headers: { 'Content-Type': file.type },
+        headers: {
+          'Content-Type': file.type
+        },
         body: file.data
       })
 
       if (uploadRes.ok) {
-        console.log("Upload succeeded:", file.name)
         uppy.info(`Upload complete: ${file.name}`, 'success', 5000)
+        console.log("Uploaded:", file.name)
       } else {
-        console.error("Upload failed:", uploadRes.statusText)
         uppy.info(`Upload failed: ${file.name}`, 'error', 5000)
+        console.error("Upload failed:", uploadRes)
       }
     } catch (err) {
-      console.error("Error:", err)
       uppy.info(`Upload error: ${file.name}`, 'error', 5000)
+      console.error("Error during upload:", err)
     }
   })
 </script>
