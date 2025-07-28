@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Upload Files to Your Project Folder</title>
 
-  <!-- Uppy CSS -->
-  <link
-    href="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.css"
-    rel="stylesheet"
-  />
+  <link href="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.css" rel="stylesheet" />
 
   <style>
     body {
@@ -23,77 +19,69 @@
     }
     #drag-drop-area {
       max-width: 600px;
-      margin: 0 auto 20px auto;
-    }
-    #progress-list {
-      max-width: 600px;
       margin: 0 auto;
-      padding: 0;
-      list-style: none;
-    }
-    .progress-item {
-      background: #fff;
-      border: 1px solid #ccc;
-      padding: 10px 15px;
-      margin-bottom: 10px;
-      border-radius: 5px;
     }
   </style>
 </head>
 <body>
 
-  <h1>Upload Files to Your Project Folder</h1>
-  <div id="drag-drop-area"></div>
-  <ul id="progress-list"></ul>
+<h1>Upload Files to Your Project Folder</h1>
+<div id="drag-drop-area"></div>
 
-  <!-- Uppy JS (ES Module Version) -->
-  <script type="module">
-    import {
-      Uppy,
-      DragDrop,
-      XHRUpload,
-      StatusBar
-    } from 'https://releases.transloadit.com/uppy/v3.13.0/uppy.min.mjs'
+<script type="module">
+  import {
+    Uppy,
+    DragDrop,
+    StatusBar
+  } from 'https://releases.transloadit.com/uppy/v3.13.0/uppy.min.mjs'
 
-    const uppy = new Uppy({
-      restrictions: {
-        maxNumberOfFiles: 10
-      },
-      autoProceed: true
-    })
+  const uppy = new Uppy({
+    restrictions: { maxNumberOfFiles: 10 },
+    autoProceed: true
+  })
 
-    uppy.use(DragDrop, { target: '#drag-drop-area' })
+  uppy.use(DragDrop, { target: '#drag-drop-area' })
+  uppy.use(StatusBar, {
+    target: 'body',
+    showProgressDetails: true,
+    hideUploadButton: true,
+    hideRetryButton: true,
+    hidePauseResumeButton: true
+  })
 
-    uppy.use(XHRUpload, {
-      endpoint: 'https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/',
-      allowedMetaFields: [],
-      method: 'POST',
-      formData: true,
-      fieldName: 'file'
-    })
+  uppy.on('file-added', async (file) => {
+    const username = "Admin" // Later: make dynamic
+    const filename = file.name
 
-    uppy.on('upload', () => {
-      document.getElementById('progress-list').innerHTML = '' // Clear previous
-    })
+    try {
+      const res = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, filename })
+      })
 
-    uppy.on('upload-progress', (file, progress) => {
-      let progressItem = document.getElementById(`progress-${file.id}`)
-      if (!progressItem) {
-        progressItem = document.createElement('li')
-        progressItem.className = 'progress-item'
-        progressItem.id = `progress-${file.id}`
-        progressItem.innerText = `${file.name}: ${Math.round(progress.bytesUploaded / file.size * 100)}%`
-        document.getElementById('progress-list').appendChild(progressItem)
+      const data = await res.json()
+      const uploadUrl = data.url
+
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file.data
+      })
+
+      if (uploadRes.ok) {
+        console.log("Upload succeeded:", file.name)
+        uppy.info(`Upload complete: ${file.name}`, 'success', 5000)
       } else {
-        progressItem.innerText = `${file.name}: ${Math.round(progress.bytesUploaded / file.size * 100)}%`
+        console.error("Upload failed:", uploadRes.statusText)
+        uppy.info(`Upload failed: ${file.name}`, 'error', 5000)
       }
-    })
-
-    uppy.on('complete', (result) => {
-      alert('Upload complete!')
-      console.log('Uploaded files:', result.successful)
-    })
-  </script>
+    } catch (err) {
+      console.error("Error:", err)
+      uppy.info(`Upload error: ${file.name}`, 'error', 5000)
+    }
+  })
+</script>
 
 </body>
 </html>
