@@ -42,11 +42,8 @@
     import {
       Uppy,
       DragDrop,
-      StatusBar,
-      XHRUpload
+      StatusBar
     } from 'https://releases.transloadit.com/uppy/v3.13.0/uppy.min.mjs'
-
-    const username = "Admin"  // You may later inject this dynamically
 
     const uppy = new Uppy({
       restrictions: { maxNumberOfFiles: 10 },
@@ -65,52 +62,46 @@
     })
 
     uppy.on('file-added', async (file) => {
+      const username = "Admin"  // Replace with dynamic value if needed
+      const filename = file.name
+
       try {
         const res = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username,
-            filename: file.name
-          })
+          body: JSON.stringify({ username, filename })
         })
 
         const data = await res.json()
-
         if (!res.ok || !data.url) throw new Error(data.error || 'No signed URL returned')
 
-        // Assign pre-signed URL directly to file object for XHRUpload
-        file.meta = file.meta || {}
-        file.meta.uploadURL = data.url
+        const upload = await fetch(data.url, {
+          method: 'PUT',
+          headers: { 'Content-Type': file.type || 'application/octet-stream' },
+          body: file.data
+        })
+
+        if (upload.ok) {
+          console.log(`✅ Uploaded: ${file.name}`)
+          uppy.info(`✅ Uploaded: ${file.name}`, 'success', 5000)
+          uppy.emit('upload-success', file, { url: data.url })
+        } else {
+          throw new Error('Upload failed')
+        }
 
       } catch (err) {
-        console.error('Error fetching signed URL:', err)
-        uppy.info(`❌ Could not get upload URL for ${file.name}`, 'error', 5000)
-      }
-    })
-
-    uppy.use(XHRUpload, {
-      endpoint: '/', // Not used; uploadURL in meta is used instead
-      allowedMetaFields: ['uploadURL'],
-      getUploadParameters: (file) => {
-        return {
-          method: 'PUT',
-          url: file.meta.uploadURL,
-          headers: {
-            'Content-Type': file.type
-          }
-        }
+        console.error('Upload error:', err)
+        uppy.info(`❌ Upload failed: ${file.name}`, 'error', 5000)
+        uppy.emit('upload-error', file, err)
       }
     })
 
     uppy.on('upload-success', (file, response) => {
-      console.log('✅ Uploaded:', file.name)
-      uppy.info(`✅ Uploaded: ${file.name}`, 'success', 5000)
+      console.log('Upload success:', file.name)
     })
 
     uppy.on('upload-error', (file, error) => {
-      console.error('❌ Upload failed:', file.name, error)
-      uppy.info(`❌ Upload failed: ${file.name}`, 'error', 5000)
+      console.error('Upload error:', file.name, error)
     })
   </script>
 
