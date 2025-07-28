@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>10|10 File Uploader – Admin</title>
-  <script src="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.js"></script>
+  <!-- ✅ FIXED: Using Uppy bundle that exposes global Uppy -->
+  <script src="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.bundle.js"></script>
   <link href="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.css" rel="stylesheet">
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
@@ -40,7 +41,7 @@
       status.style.color = isError ? 'red' : 'green';
     };
 
-    // FIXED: Updated from Uppy.Core() to new Uppy()
+    // ✅ Constructor now available globally from bundle.min.js
     const uppy = new Uppy({
       restrictions: { maxNumberOfFiles: 5 },
       autoProceed: false
@@ -59,7 +60,6 @@
 
       for (const file of files) {
         try {
-          // Step 1: Get pre-signed URL from Lambda
           const lambdaRes = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -76,7 +76,6 @@
 
           const { url: presignedUrl } = await lambdaRes.json();
 
-          // Step 2: Upload to S3
           const s3Res = await fetch(presignedUrl, {
             method: 'PUT',
             headers: { 'Content-Type': file.type },
