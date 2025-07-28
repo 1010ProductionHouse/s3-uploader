@@ -57,43 +57,53 @@
       showProgressDetails: true,
       hideUploadButton: true,
       hideRetryButton: false,
-      hidePauseResumeButton: false
+      hidePauseResumeButton: false,
+      proudlyDisplayPoweredByUppy: false
     })
 
     uppy.on('file-added', async (file) => {
-      const username = "Admin"  // Replace with dynamic username later
+      const username = "Admin"  // Replace this with dynamic assignment later
       const filename = file.name
 
       try {
-        const presignRes = await fetch(
-          'https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, filename })
-          }
-        )
+        const res = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, filename })
+        })
 
-        const data = await presignRes.json()
-        if (!presignRes.ok || !data.url) throw new Error(data.error || 'Failed to get signed URL')
+        const data = await res.json()
+        if (!res.ok || !data.url) throw new Error(data.error || 'No signed URL returned')
 
-        const uploadRes = await fetch(data.url, {
+        const upload = await fetch(data.url, {
           method: 'PUT',
           headers: { 'Content-Type': file.type },
           body: file.data
         })
 
-        if (uploadRes.ok) {
-          uppy.info(`Upload complete: ${file.name}`, 'success', 5000)
+        if (upload.ok) {
+          console.log(`✅ Uploaded: ${file.name}`)
+          uppy.info(`✅ Uploaded: ${file.name}`, 'success', 5000)
           uppy.emit('upload-success', file, { url: data.url })
         } else {
-          uppy.info(`Upload failed: ${file.name}`, 'error', 5000)
+          console.error(`❌ Upload failed for ${file.name}`)
+          uppy.info(`❌ Upload failed: ${file.name}`, 'error', 5000)
           uppy.emit('upload-error', file, new Error('Upload failed'))
         }
+
       } catch (err) {
-        uppy.info(`Upload error: ${file.name}`, 'error', 5000)
+        console.error('Error during upload:', err)
+        uppy.info(`❌ Upload error: ${file.name}`, 'error', 5000)
         uppy.emit('upload-error', file, err)
       }
+    })
+
+    uppy.on('upload-success', (file, response) => {
+      console.log('Upload success event fired:', file.name)
+    })
+
+    uppy.on('upload-error', (file, error) => {
+      console.error('Upload error event fired:', file.name, error)
     })
   </script>
 
