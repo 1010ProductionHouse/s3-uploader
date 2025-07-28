@@ -40,14 +40,13 @@
       status.style.color = isError ? 'red' : 'green';
     };
 
-    const uppy = new Uppy.Core({
+    // FIXED: Updated from Uppy.Core() to new Uppy()
+    const uppy = new Uppy({
       restrictions: { maxNumberOfFiles: 5 },
       autoProceed: false
     });
 
     uppy.use(Uppy.DragDrop, { target: '#drag-drop-area' });
-
-    // NOTE: We DO NOT call uppy.upload() or use any internal upload plugins like XHRUpload
 
     document.getElementById('upload-btn').addEventListener('click', async () => {
       const files = uppy.getFiles();
