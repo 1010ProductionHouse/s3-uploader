@@ -17,15 +17,13 @@
       padding: 40px;
       background-color: #f8f9fa;
     }
-
     h1 {
       text-align: center;
       margin-bottom: 30px;
     }
-
     #drag-drop-area {
       max-width: 600px;
-      margin: 0 auto 20px auto;
+      margin: 0 auto;
     }
   </style>
 </head>
@@ -39,11 +37,8 @@
     import {
       Uppy,
       DragDrop,
-      XHRUpload,
-      StatusBar
+      XHRUpload
     } from 'https://releases.transloadit.com/uppy/v3.13.0/uppy.min.mjs'
-
-    const USERNAME = "Admin" // Static for now – will become dynamic later
 
     const uppy = new Uppy({
       restrictions: {
@@ -53,14 +48,6 @@
     })
 
     uppy.use(DragDrop, { target: '#drag-drop-area' })
-
-    uppy.use(StatusBar, {
-      target: 'body',
-      showProgressDetails: true,
-      hideUploadButton: false,
-      hideAfterFinish: true,
-      proudlyDisplayPoweredByUppy: false
-    })
 
     uppy.use(XHRUpload, {
       endpoint: 'https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/',
@@ -73,44 +60,17 @@
       headers: {
         'Content-Type': 'application/json'
       },
-      allowedMetaFields: [] // <-- FIXED field name
+      allowedMetaFields: [] // ✅ Corrected key
     })
 
-    uppy.on('upload', async () => {
-      const files = uppy.getFiles()
+    uppy.on('upload-error', (file, error, response) => {
+      console.error('Upload error:', error)
+      alert('Upload failed: ' + error.message)
+    })
 
-      for (const file of files) {
-        try {
-          const response = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              username: USERNAME,
-              filename: file.name
-            })
-          })
-
-          const { url } = await response.json()
-
-          await fetch(url, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': file.type || 'application/octet-stream'
-            },
-            body: file.data
-          })
-
-          uppy.setFileState(file.id, {
-            progress: { uploadComplete: true, uploadStarted: true, percentage: 100 }
-          })
-
-        } catch (err) {
-          console.error('Upload error:', err)
-          uppy.info(`Upload failed: ${file.name}`, 'error', 5000)
-        }
-      }
-
-      uppy.emit('complete', { successful: uppy.getFiles() })
+    uppy.on('complete', (result) => {
+      alert('Upload complete!')
+      console.log('Uploaded files:', result.successful)
     })
   </script>
 
