@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Upload Files to Your Project Folder</title>
 
-  <link href="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.css" rel="stylesheet" />
+  <!-- Uppy CSS -->
+  <link
+    href="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.css"
+    rel="stylesheet"
+  />
 
   <style>
     body {
@@ -17,9 +21,13 @@
       text-align: center;
       margin-bottom: 30px;
     }
-    #drag-drop-area, #status-bar {
+    #drag-drop-area {
       max-width: 600px;
       margin: 0 auto 20px;
+    }
+    #status-bar {
+      max-width: 600px;
+      margin: 0 auto;
     }
   </style>
 </head>
@@ -29,12 +37,16 @@
   <div id="drag-drop-area"></div>
   <div id="status-bar"></div>
 
+  <!-- Uppy JS -->
   <script type="module">
     import {
       Uppy,
       DragDrop,
-      StatusBar
+      StatusBar,
+      XHRUpload
     } from 'https://releases.transloadit.com/uppy/v3.13.0/uppy.min.mjs'
+
+    const username = "Admin"  // You may later inject this dynamically
 
     const uppy = new Uppy({
       restrictions: { maxNumberOfFiles: 10 },
@@ -53,64 +65,52 @@
     })
 
     uppy.on('file-added', async (file) => {
-      const username = "Admin"
-      const filename = file.name
-
       try {
-        // Step 1: Get presigned URL
-        const presignRes = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
+        const res = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, filename })
+          body: JSON.stringify({
+            username,
+            filename: file.name
+          })
         })
 
-        const presignData = await presignRes.json()
-        if (!presignRes.ok || !presignData.url) throw new Error(presignData.error || 'Presign error')
+        const data = await res.json()
 
-        // Step 2: Upload directly to S3
-        const xhr = new XMLHttpRequest()
-        xhr.open("PUT", presignData.url, true)
-        xhr.setRequestHeader("Content-Type", file.type)
+        if (!res.ok || !data.url) throw new Error(data.error || 'No signed URL returned')
 
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const percentage = Math.round((event.loaded / event.total) * 100)
-            uppy.setFileState(file.id, {
-              progress: {
-                uploadStarted: Date.now(),
-                bytesUploaded: event.loaded,
-                bytesTotal: event.total,
-                percentage
-              }
-            })
-          }
-        }
-
-        xhr.onload = () => {
-          if (xhr.status === 200) {
-            console.log(`✅ Uploaded: ${file.name}`)
-            uppy.info(`✅ Uploaded: ${file.name}`, 'success', 5000)
-            uppy.emit('upload-success', file, { url: presignData.url })
-          } else {
-            console.error(`❌ Upload failed: ${file.name}`)
-            uppy.info(`❌ Upload failed: ${file.name}`, 'error', 5000)
-            uppy.emit('upload-error', file, new Error('Upload failed'))
-          }
-        }
-
-        xhr.onerror = () => {
-          console.error(`❌ Upload error: ${file.name}`)
-          uppy.info(`❌ Upload error: ${file.name}`, 'error', 5000)
-          uppy.emit('upload-error', file, new Error('XHR error'))
-        }
-
-        xhr.send(file.data)
+        // Assign pre-signed URL directly to file object for XHRUpload
+        file.meta = file.meta || {}
+        file.meta.uploadURL = data.url
 
       } catch (err) {
-        console.error('Error during upload:', err)
-        uppy.info(`❌ Upload error: ${file.name}`, 'error', 5000)
-        uppy.emit('upload-error', file, err)
+        console.error('Error fetching signed URL:', err)
+        uppy.info(`❌ Could not get upload URL for ${file.name}`, 'error', 5000)
       }
+    })
+
+    uppy.use(XHRUpload, {
+      endpoint: '/', // Not used; uploadURL in meta is used instead
+      allowedMetaFields: ['uploadURL'],
+      getUploadParameters: (file) => {
+        return {
+          method: 'PUT',
+          url: file.meta.uploadURL,
+          headers: {
+            'Content-Type': file.type
+          }
+        }
+      }
+    })
+
+    uppy.on('upload-success', (file, response) => {
+      console.log('✅ Uploaded:', file.name)
+      uppy.info(`✅ Uploaded: ${file.name}`, 'success', 5000)
+    })
+
+    uppy.on('upload-error', (file, error) => {
+      console.error('❌ Upload failed:', file.name, error)
+      uppy.info(`❌ Upload failed: ${file.name}`, 'error', 5000)
     })
   </script>
 
