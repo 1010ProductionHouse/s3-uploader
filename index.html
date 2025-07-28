@@ -43,7 +43,7 @@
       StatusBar
     } from 'https://releases.transloadit.com/uppy/v3.13.0/uppy.min.mjs'
 
-    const USERNAME = "Admin" // This will be dynamic in a future step
+    const USERNAME = "Admin" // Static for now – will become dynamic later
 
     const uppy = new Uppy({
       restrictions: {
@@ -73,7 +73,7 @@
       headers: {
         'Content-Type': 'application/json'
       },
-      metaFields: []
+      allowedMetaFields: [] // <-- FIXED field name
     })
 
     uppy.on('upload', async () => {
