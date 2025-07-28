@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Upload Files to Your Project Folder</title>
 
-  <link
-    href="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.css"
-    rel="stylesheet"
-  />
+  <link href="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.css" rel="stylesheet" />
 
   <style>
     body {
@@ -20,13 +17,9 @@
       text-align: center;
       margin-bottom: 30px;
     }
-    #drag-drop-area {
+    #drag-drop-area, #status-bar {
       max-width: 600px;
       margin: 0 auto 20px;
-    }
-    #status-bar {
-      max-width: 600px;
-      margin: 0 auto;
     }
   </style>
 </head>
@@ -40,15 +33,12 @@
     import {
       Uppy,
       DragDrop,
-      StatusBar,
-      XHRUpload
+      StatusBar
     } from 'https://releases.transloadit.com/uppy/v3.13.0/uppy.min.mjs'
-
-    const username = "Admin" // Replace with dynamic value later
 
     const uppy = new Uppy({
       restrictions: { maxNumberOfFiles: 10 },
-      autoProceed: false
+      autoProceed: true
     })
 
     uppy.use(DragDrop, { target: '#drag-drop-area' })
@@ -56,49 +46,73 @@
     uppy.use(StatusBar, {
       target: '#status-bar',
       showProgressDetails: true,
-      hideUploadButton: false,
+      hideUploadButton: true,
       hideRetryButton: false,
       hidePauseResumeButton: false,
       proudlyDisplayPoweredByUppy: false
     })
 
-    uppy.use(XHRUpload, {
-      getUploadParameters: async (file) => {
-        const response = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
+    uppy.on('file-added', async (file) => {
+      const username = "Admin"
+      const filename = file.name
+
+      try {
+        // Step 1: Get presigned URL
+        const presignRes = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username,
-            filename: file.name,
-            contentType: file.type
-          })
+          body: JSON.stringify({ username, filename })
         })
 
-        const data = await response.json()
-        if (!response.ok || !data.url) {
-          throw new Error(data.error || 'Failed to fetch pre-signed URL')
-        }
+        const presignData = await presignRes.json()
+        if (!presignRes.ok || !presignData.url) throw new Error(presignData.error || 'Presign error')
 
-        return {
-          method: 'PUT',
-          url: data.url,
-          headers: {
-            'Content-Type': file.type
+        // Step 2: Upload directly to S3
+        const xhr = new XMLHttpRequest()
+        xhr.open("PUT", presignData.url, true)
+        xhr.setRequestHeader("Content-Type", file.type)
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percentage = Math.round((event.loaded / event.total) * 100)
+            uppy.setFileState(file.id, {
+              progress: {
+                uploadStarted: Date.now(),
+                bytesUploaded: event.loaded,
+                bytesTotal: event.total,
+                percentage
+              }
+            })
           }
         }
-      },
-      allowedMetaFields: []
-    })
 
-    uppy.on('upload-success', (file, response) => {
-      console.log('✅ Upload success:', file.name)
-      uppy.info(`✅ ${file.name} uploaded successfully`, 'success', 5000)
-    })
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            console.log(`✅ Uploaded: ${file.name}`)
+            uppy.info(`✅ Uploaded: ${file.name}`, 'success', 5000)
+            uppy.emit('upload-success', file, { url: presignData.url })
+          } else {
+            console.error(`❌ Upload failed: ${file.name}`)
+            uppy.info(`❌ Upload failed: ${file.name}`, 'error', 5000)
+            uppy.emit('upload-error', file, new Error('Upload failed'))
+          }
+        }
 
-    uppy.on('upload-error', (file, error, response) => {
-      console.error('❌ Upload failed:', file.name, error)
-      uppy.info(`❌ ${file.name} failed to upload`, 'error', 5000)
+        xhr.onerror = () => {
+          console.error(`❌ Upload error: ${file.name}`)
+          uppy.info(`❌ Upload error: ${file.name}`, 'error', 5000)
+          uppy.emit('upload-error', file, new Error('XHR error'))
+        }
+
+        xhr.send(file.data)
+
+      } catch (err) {
+        console.error('Error during upload:', err)
+        uppy.info(`❌ Upload error: ${file.name}`, 'error', 5000)
+        uppy.emit('upload-error', file, err)
+      }
     })
   </script>
+
 </body>
 </html>
