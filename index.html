@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Upload Files to Your Project Folder</title>
 
-  <!-- Uppy CSS -->
-  <link
-    href="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.css"
-    rel="stylesheet"
-  />
+  <link href="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.css" rel="stylesheet" />
 
   <style>
     body {
@@ -21,13 +17,9 @@
       text-align: center;
       margin-bottom: 30px;
     }
-    #drag-drop-area {
+    #drag-drop-area, #status-bar {
       max-width: 600px;
       margin: 0 auto 20px;
-    }
-    #status-bar {
-      max-width: 600px;
-      margin: 0 auto;
     }
   </style>
 </head>
@@ -37,17 +29,19 @@
   <div id="drag-drop-area"></div>
   <div id="status-bar"></div>
 
-  <!-- Uppy JS -->
   <script type="module">
     import {
       Uppy,
       DragDrop,
-      StatusBar
+      StatusBar,
+      XHRUpload
     } from 'https://releases.transloadit.com/uppy/v3.13.0/uppy.min.mjs'
+
+    const username = "Admin"; // Set this dynamically later if needed
 
     const uppy = new Uppy({
       restrictions: { maxNumberOfFiles: 10 },
-      autoProceed: true
+      autoProceed: false
     })
 
     uppy.use(DragDrop, { target: '#drag-drop-area' })
@@ -55,54 +49,44 @@
     uppy.use(StatusBar, {
       target: '#status-bar',
       showProgressDetails: true,
-      hideUploadButton: true,
+      hideUploadButton: false,
       hideRetryButton: false,
       hidePauseResumeButton: false,
       proudlyDisplayPoweredByUppy: false
     })
 
-    uppy.on('file-added', async (file) => {
-      const username = "Admin"  // Replace with dynamic value if needed
-      const filename = file.name
-
-      try {
+    uppy.use(XHRUpload, {
+      endpoint: '', // placeholder
+      method: 'PUT',
+      getUploadParameters: async (file) => {
         const res = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, filename })
-        })
+          body: JSON.stringify({ username, filename: file.name })
+        });
 
-        const data = await res.json()
-        if (!res.ok || !data.url) throw new Error(data.error || 'No signed URL returned')
+        const data = await res.json();
 
-        const upload = await fetch(data.url, {
+        return {
           method: 'PUT',
-          headers: { 'Content-Type': file.type || 'application/octet-stream' },
-          body: file.data
-        })
+          endpoint: data.url,
+          headers: {
+            'Content-Type': file.type
+          }
+        };
+      },
+      allowedMetaFields: []
+    });
 
-        if (upload.ok) {
-          console.log(`✅ Uploaded: ${file.name}`)
-          uppy.info(`✅ Uploaded: ${file.name}`, 'success', 5000)
-          uppy.emit('upload-success', file, { url: data.url })
-        } else {
-          throw new Error('Upload failed')
-        }
-
-      } catch (err) {
-        console.error('Upload error:', err)
-        uppy.info(`❌ Upload failed: ${file.name}`, 'error', 5000)
-        uppy.emit('upload-error', file, err)
-      }
-    })
-
-    uppy.on('upload-success', (file, response) => {
-      console.log('Upload success:', file.name)
-    })
+    uppy.on('complete', (result) => {
+      console.log('✅ All uploads complete:', result.successful)
+      uppy.info('✅ All files uploaded successfully!', 'success', 5000)
+    });
 
     uppy.on('upload-error', (file, error) => {
-      console.error('Upload error:', file.name, error)
-    })
+      console.error('❌ Upload error:', file.name, error);
+      uppy.info(`❌ Error uploading ${file.name}`, 'error', 5000)
+    });
   </script>
 
 </body>
