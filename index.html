@@ -36,28 +36,55 @@
   <script type="module">
     import {
       Uppy,
-      DragDrop,
-      XHRUpload
+      DragDrop
     } from 'https://releases.transloadit.com/uppy/v3.13.0/uppy.min.mjs'
 
     const uppy = new Uppy({
-      restrictions: {
-        maxNumberOfFiles: 10
-      },
-      autoProceed: false
+      restrictions: { maxNumberOfFiles: 10 },
+      autoProceed: true
     })
 
     uppy.use(DragDrop, { target: '#drag-drop-area' })
 
-    uppy.use(XHRUpload, {
-      endpoint: 'https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', // Replace with your real pre-signed URL endpoint
-      formData: true,
-      fieldName: 'file'
-    })
+    uppy.on('file-added', async (file) => {
+      try {
+        const lambdaUrl = 'https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/'
 
-    uppy.on('complete', (result) => {
-      alert('Upload complete!')
-      console.log('Uploaded files:', result.successful)
+        const res = await fetch(lambdaUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: 'Admin', // Replace with dynamic value later if needed
+            filename: file.name
+          })
+        })
+
+        const data = await res.json()
+
+        if (!data.url) {
+          alert('Failed to get signed URL')
+          console.error(data)
+          return
+        }
+
+        // Upload file directly to S3 using the signed URL
+        const uploadRes = await fetch(data.url, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': file.type
+          },
+          body: file.data
+        })
+
+        if (uploadRes.ok) {
+          alert(`File "${file.name}" uploaded successfully.`)
+        } else {
+          alert(`Upload failed with status ${uploadRes.status}.`)
+        }
+      } catch (error) {
+        console.error('Upload error:', error)
+        alert('Upload failed. Check the console for more info.')
+      }
     })
   </script>
 
