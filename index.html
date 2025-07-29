@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>10|10 File Uploader – Admin</title>
-  <!-- ✅ Using correct Uppy global bundle -->
   <script src="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.js"></script>
   <link href="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.css" rel="stylesheet">
   <style>
@@ -41,58 +40,67 @@
       status.style.color = isError ? 'red' : 'green';
     };
 
-    // ✅ Use the global Uppy constructor via Uppy.Uppy
     const uppy = new Uppy.Uppy({
       restrictions: { maxNumberOfFiles: 5 },
       autoProceed: false
     });
 
     uppy.use(Uppy.DragDrop, { target: '#drag-drop-area' });
+    uppy.use(Uppy.StatusBar, {
+      target: 'body',
+      showProgressDetails: true,
+      hideUploadButton: true
+    });
+    uppy.use(Uppy.Informer, { target: 'body' });
+    uppy.use(Uppy.ProgressBar, {
+      target: 'body',
+      hideAfterFinish: true
+    });
 
-    document.getElementById('upload-btn').addEventListener('click', async () => {
-      const files = uppy.getFiles();
+    const uploadFile = async (file) => {
       const username = getUsername();
+
+      try {
+        const lambdaRes = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, filename: file.name })
+        });
+
+        if (!lambdaRes.ok) {
+          const errorText = await lambdaRes.text();
+          throw new Error(`Lambda error: ${errorText}`);
+        }
+
+        const { url: presignedUrl } = await lambdaRes.json();
+
+        const s3Res = await fetch(presignedUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': file.type },
+          body: file.data
+        });
+
+        if (!s3Res.ok) {
+          const errMsg = await s3Res.text();
+          throw new Error(`S3 upload failed: ${errMsg}`);
+        }
+
+        displayStatus(`✅ Upload successful: ${file.name}`);
+      } catch (err) {
+        console.error(err);
+        displayStatus(`❌ Upload failed: ${file.name}`, true);
+      }
+    };
+
+    document.getElementById('upload-btn').addEventListener('click', () => {
+      const files = uppy.getFiles();
 
       if (files.length === 0) {
         displayStatus('❌ No files selected', true);
         return;
       }
 
-      for (const file of files) {
-        try {
-          const lambdaRes = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              username: username,
-              filename: file.name
-            })
-          });
-
-          if (!lambdaRes.ok) {
-            const errorText = await lambdaRes.text();
-            throw new Error(`Lambda error: ${errorText}`);
-          }
-
-          const { url: presignedUrl } = await lambdaRes.json();
-
-          const s3Res = await fetch(presignedUrl, {
-            method: 'PUT',
-            headers: { 'Content-Type': file.type },
-            body: file.data
-          });
-
-          if (!s3Res.ok) {
-            const errMsg = await s3Res.text();
-            throw new Error(`S3 upload failed: ${errMsg}`);
-          }
-
-          displayStatus(`✅ Upload successful: ${file.name}`);
-        } catch (err) {
-          console.error(err);
-          displayStatus(`❌ Upload failed: ${file.name}`, true);
-        }
-      }
+      Promise.all(files.map(uploadFile));
     });
   </script>
 
