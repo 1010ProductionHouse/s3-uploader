@@ -2,44 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <title>Upload Your Files to S3</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>1010 S3 Uploader</title>
 
-  <!-- ✅ Uppy Bundle: Includes core, plugins, and styles -->
-  <script src="https://releases.transloadit.com/uppy/v3.15.0/uppy.min.js"></script>
-  <link href="https://releases.transloadit.com/uppy/v3.15.0/uppy.min.css" rel="stylesheet">
+  <!-- Uppy Core -->
+  <script src="https://cdn.jsdelivr.net/npm/@uppy/core@3.15.0/dist/uppy.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uppy/core@3.15.0/dist/style.min.css" />
+
+  <!-- Uppy Dashboard -->
+  <script src="https://cdn.jsdelivr.net/npm/@uppy/dashboard@3.15.0/dist/uppy.dashboard.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uppy/dashboard@3.15.0/dist/style.min.css" />
+
+  <!-- Uppy XHRUpload -->
+  <script src="https://cdn.jsdelivr.net/npm/@uppy/xhr-upload@3.15.0/dist/uppy.xhr-upload.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2em;
+    }
+    #drag-drop-area {
+      margin-top: 2em;
+    }
+  </style>
 </head>
-
 <body>
+  <h2>Upload Your Files to S3</h2>
   <div id="drag-drop-area"></div>
 
   <script>
-    const uppy = new Uppy.Uppy({
+    const uppy = new Uppy.Core({
       debug: true,
       autoProceed: false
-    });
+    })
 
     uppy.use(Uppy.Dashboard, {
       inline: true,
       target: '#drag-drop-area',
       showProgressDetails: true
-    });
+    })
 
     uppy.use(Uppy.XHRUpload, {
-      endpoint: 'https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', // 🔌 Replace with actual Lambda URL
+      endpoint: 'https://your-api-endpoint.com/upload', // 🔧 Replace with actual Lambda endpoint
       fieldName: 'file',
-      bundle: false
-    });
+      formData: true,
+      bundle: true
+    })
 
     uppy.on('complete', (result) => {
-      console.log('Upload complete! ✅ Files:', result.successful);
-      alert('Upload complete!');
-    });
-
-    uppy.on('error', (err) => {
-      console.error('Uppy error 💥', err);
-      alert('Upload failed. Check console for details.');
-    });
+      console.log('Upload complete! 🎉', result)
+      alert(`${result.successful.length} file(s) uploaded successfully.`)
+    })
   </script>
 </body>
 </html>
