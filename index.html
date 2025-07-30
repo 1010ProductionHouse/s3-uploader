@@ -3,8 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <title>Uploader UX Upgrade</title>
+
+  <!-- Google Maps with async loading -->
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD9LNYKrLxCNV_u4sI6PNjBy8eKqIjjfM0&libraries=places&loading=async"
+    async
+    defer
+  ></script>
+
+  <!-- Uppy CDN -->
   <script src="https://releases.transloadit.com/uppy/v3.15.0/uppy.min.js"></script>
   <link href="https://releases.transloadit.com/uppy/v3.15.0/uppy.min.css" rel="stylesheet">
+
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     #uploadStatus { margin-top: 10px; white-space: pre-line; }
@@ -19,7 +29,7 @@
   <div id="uploadStatus">🔴 No files selected</div>
 
   <script>
-    const uppy = new Uppy({ debug: true, autoProceed: false })
+    const uppy = new window.Uppy({ debug: true, autoProceed: false })
       .use(Uppy.Dashboard, {
         inline: true,
         target: '#uppy',
@@ -69,7 +79,7 @@
           message += `\n❌ Failed: ${failList.join(', ')}`;
         }
         displayStatus(message);
-        updateReadyState(); // Recheck files for next round
+        updateReadyState(); // Recheck in case user wants another batch
       });
     });
   </script>
