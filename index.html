@@ -19,10 +19,10 @@
     <script src="https://releases.transloadit.com/uppy/v3.6.0/uppy.min.js"></script>
 
     <script>
-      const uppy = new Uppy.Core({
+      const uppy = new Uppy({
         autoProceed: true,
         restrictions: {
-          maxFileSize: 10 * 1024 * 1024,
+          maxFileSize: 10 * 1024 * 1024, // 10 MB
           maxNumberOfFiles: 5,
           allowedFileTypes: ['image/*', 'video/*']
         }
@@ -41,7 +41,7 @@
       });
 
       uppy.on('complete', (result) => {
-        console.log('Upload complete!', result.successful);
+        console.log('✅ Upload complete!', result.successful);
       });
     </script>
   </body>
