@@ -1,60 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Uppy File Uploader</title>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Uppy S3 Direct Upload Test</title>
+  <!-- Your bundled Uppy styles -->
+  <link rel="stylesheet" href="./dist/uppy.bundle.css">
+  <style>
+    /* Optional: center the uploader on the page */
+    body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    #drag-drop-area { width: 80%; max-width: 600px; }
+  </style>
+</head>
+<body>
+  <!-- Uppy will mount the dashboard here -->
+  <div id="drag-drop-area"></div>
 
-<!-- Uppy CSS -->
-<link href="https://cdn.jsdelivr.net/npm/@uppy/core@3.4.1/dist/style.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/@uppy/dashboard@3.4.1/dist/style.min.css" rel="stylesheet">
+  <!-- Your bundled Uppy code -->
+  <script src="./dist/uppy.bundle.js"></script>
+  <script>
+    // The Uppy instance was assigned to window.uppy in your src/index.js
+    const uppy = window.uppy;
 
-<!-- Uppy JS -->
-<script src="https://cdn.jsdelivr.net/npm/@uppy/core@3.4.1/dist/uppy.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@uppy/dashboard@3.4.1/dist/uppy.min.js"></script>
+    // Log success and show the S3 key
+    uppy.on('upload-success', (file, response) => {
+      console.log('✔️ Upload successful:', file.name);
+      console.log('S3 Key:', file.meta.s3Key);
+      alert(`Uploaded ${file.name} as ${file.meta.s3Key}`);
+    });
 
-<!-- Your Uppy Setup -->
-<script>
-  const uppy = Uppy.Core({
-    debug: true,
-    autoProceed: false,
-  });
-
-  uppy.use(Uppy.Dashboard, {
-    inline: true,
-    target: '#drag-drop-area',
-    showProgressDetails: true,
-    proudlyDisplayPoweredByUppy: false,
-  });
-
-  uppy.on('upload', async () => {
-    for (const file of uppy.getFiles()) {
-      const response = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filename: file.name,
-          filetype: file.type
-        })
-      });
-
-      const { uploadUrl, key } = await response.json();
-
-      const upload = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type },
-        body: file.data
-      });
-
-      if (upload.ok) {
-        console.log(`✅ ${file.name} uploaded to S3`);
-      } else {
-        console.error(`❌ ${file.name} failed`, await upload.text());
-      }
-    }
-
-    alert('All files uploaded!');
-  });
-</script>
-  </body>
+    // Log errors
+    uppy.on('upload-error', (file, error) => {
+      console.error('❌ Upload failed:', file.name, error);
+      alert(`Upload failed: ${error}`);
+    });
+  </script>
+</body>
 </html>
