@@ -16,37 +16,62 @@
     <div id="drag-drop-area"></div>
 
     <!-- Uppy JS -->
-    <script src="https://releases.transloadit.com/uppy/v3.6.0/uppy.min.js"></script>
+    <script type="module">
+  import Uppy from 'https://releases.transloadit.com/uppy/v3.4.1/uppy.min.mjs';
 
-    <script>
-      const uppy = new Uppy.Uppy({
-        autoProceed: true,
-        restrictions: {
-          maxFileSize: 10 * 1024 * 1024,
-          maxNumberOfFiles: 5,
-          allowedFileTypes: ['image/*', 'video/*']
-        }
-      });
+  const uppy = new Uppy.Uppy({
+    debug: true,
+    autoProceed: false,
+  });
 
-      uppy.use(Uppy.Dashboard, {
-        inline: true,
-        target: '#drag-drop-area',
-        showProgressDetails: true
-      });
+  uppy.use(Uppy.Dashboard, {
+    inline: true,
+    target: '#drag-drop-area',
+    showProgressDetails: true,
+    proudlyDisplayPoweredByUppy: false,
+  });
 
-      uppy.use(Uppy.XHRUpload, {
-        endpoint: 'https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/',
+  uppy.on('file-added', (file) => {
+    console.log('File added:', file.name);
+  });
+
+  uppy.on('upload', async () => {
+    for (const fileID of uppy.getFiles().map(f => f.id)) {
+      const file = uppy.getFile(fileID);
+
+      // 🔗 Step 1: Get presigned URL
+      const response = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
         method: 'POST',
-        bundle: true, // 👈 Key fix: send metadata as JSON
         headers: {
           'Content-Type': 'application/json'
         },
-        formData: false // 👈 Prevents raw multipart/form-data
+        body: JSON.stringify({
+          filename: file.name,
+          filetype: file.type
+        })
       });
 
-      uppy.on('complete', (result) => {
-        console.log('✅ Upload complete!', result.successful);
+      const { uploadUrl, key } = await response.json();
+      console.log('Presigned URL received for', file.name, key);
+
+      // 🛫 Step 2: Upload to S3
+      const upload = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': file.type
+        },
+        body: file.data
       });
-    </script>
+
+      if (upload.ok) {
+        console.log(`✅ ${file.name} uploaded successfully to S3`);
+      } else {
+        console.error(`❌ ${file.name} failed to upload`, await upload.text());
+      }
+    }
+
+    alert('All files uploaded!');
+  });
+</script>
   </body>
 </html>
