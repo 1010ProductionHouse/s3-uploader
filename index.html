@@ -2,7 +2,6 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta
       name="viewport"
@@ -13,70 +12,53 @@
     <!-- Core CSS -->
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@uppy/core@4.3.4/dist/style.min.css"
+      href="https://unpkg.com/@uppy/core@4/dist/style.min.css"
     />
 
     <!-- Dashboard CSS -->
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@uppy/dashboard@4.3.4/dist/style.min.css"
-    />
-
-    <!-- StatusBar CSS -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@uppy/status-bar@4.1.0/dist/style.min.css"
+      href="https://unpkg.com/@uppy/dashboard@4/dist/style.min.css"
     />
   </head>
 
   <body>
-    <!-- Drag-and-drop container -->
+    <!-- Drop-and-drop area -->
     <div id="drag-drop-area"></div>
 
     <script type="module">
-      // 1) Core Uppy library
-      import Uppy from 'https://cdn.jsdelivr.net/npm/@uppy/core@4.3.4/dist/uppy.min.mjs';
+      // 1) Core orchestrator
+      import Uppy from 'https://unpkg.com/@uppy/core@4/dist/uppy.min.mjs';
 
-      // 2) Dashboard UI plugin
-      import Dashboard from 'https://cdn.jsdelivr.net/npm/@uppy/dashboard@4.3.4/dist/uppy.dashboard.min.mjs';
+      // 2) Dashboard UI
+      import Dashboard from 'https://unpkg.com/@uppy/dashboard@4/dist/uppy.dashboard.min.mjs';
 
-      // 3) Status bar (integrated by Dashboard, but explicit here if you need it elsewhere)
-      import StatusBar from 'https://cdn.jsdelivr.net/npm/@uppy/status-bar@4.1.0/dist/uppy.status-bar.min.mjs';
+      // 3) XHR transport plugin
+      import XHRUpload from 'https://unpkg.com/@uppy/xhr-upload@4/dist/uppy.xhr-upload.min.mjs';
 
-      // 4) XHRUpload for sending files to your server
-      import XHRUpload from 'https://cdn.jsdelivr.net/npm/@uppy/xhr-upload@4.3.3/dist/uppy.xhr-upload.min.mjs';
-
-      // Initialize Uppy
       const uppy = new Uppy({
         restrictions: {
-          maxFileSize: 10 * 1024 * 1024, // 10 MB
+          maxFileSize: 10 * 1024 * 1024,
           maxNumberOfFiles: 5,
           allowedFileTypes: ['image/*', 'video/*']
         },
         autoProceed: true
       });
 
-      // Mount the Dashboard UI
+      // Mount Dashboard
       uppy.use(Dashboard, {
         inline: true,
         target: '#drag-drop-area',
         showProgressDetails: true
       });
 
-      // (Optional) Explicitly mount a StatusBar anywhere else
-      uppy.use(StatusBar, {
-        target: 'body',
-        showProgressDetails: true
-      });
-
-      // Configure your Lambda/API endpoint here:
+      // Hook up your Lambda URL here
       uppy.use(XHRUpload, {
         endpoint: 'https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/',
         fieldName: 'files',
         formData: true
       });
 
-      // Listen for upload completion
       uppy.on('complete', (result) => {
         console.log('Upload complete!', result.successful);
       });
