@@ -2,57 +2,80 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Uppy File Uploader</title>
-  <link href="https://releases.transloadit.com/uppy/v4.18.0/uppy.min.css" rel="stylesheet" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 2em;
-      background: #f5f5f5;
-    }
-    #files-drag-drop {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Uppy → AWS S3 Demo</title>
+
+  <link
+    href="https://releases.transloadit.com/uppy/v4.18.0/uppy.min.css"
+    rel="stylesheet"
+  />
 </head>
 <body>
-  <h2>Upload your files</h2>
-  <div id="files-drag-drop"></div>
+  <h2>Drag & Drop Files to Upload</h2>
+  <div id="drag-drop-area"></div>
 
   <script type="module">
-    import { Uppy, Dashboard, XHRUpload } from 'https://releases.transloadit.com/uppy/v4.18.0/uppy.min.mjs'
+    import Uppy from 'https://releases.transloadit.com/uppy/v4.18.0/uppy.min.mjs'
+    import { Dashboard, ProgressBar, StatusBar } from 'https://releases.transloadit.com/uppy/v4.18.0/uppy.min.mjs'
+    import AwsS3 from 'https://unpkg.com/@uppy/aws-s3@3.17.0/dist/uppy.aws-s3.min.mjs'
 
+    // 1. Init Uppy
     const uppy = new Uppy({
+      autoProceed: true,
       restrictions: {
-        maxNumberOfFiles: 10,
-        allowedFileTypes: ['image/*', 'video/*', '.pdf', '.docx']
-      },
-      autoProceed: false
+        maxFileSize: 5 * 1024 * 1024 * 1024, // 5 GiB cap
+        maxNumberOfFiles: 3
+      }
     })
 
+    // 2. UI Plugins
     uppy.use(Dashboard, {
-      target: '#files-drag-drop',
       inline: true,
-      showProgressDetails: true,
-      note: 'Up to 10 files. Supported types: images, video, PDF, DOCX.'
+      target: '#drag-drop-area',
+      showProgressDetails: true
+    })
+    uppy.use(ProgressBar, { target: Dashboard, fixed: true })
+    uppy.use(StatusBar, {
+      target: Dashboard,
+      hideUploadButton: false
     })
 
-    uppy.use(XHRUpload, {
-      endpoint: 'https://your-lambda-endpoint.com/upload',
-      fieldName: 'file',
-      bundle: false
+    // 3. AWS S3 Plugin
+    uppy.use(AwsS3, {
+      // call our Lambda signer for each file/part
+      getUploadParameters (file) {
+        return fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            filename: file.name,
+            contentType: file.type
+          })
+        })
+        .then(res => res.json())
+        .then(data => {
+          return {
+            method: 'PUT',
+            url: data.signedUrl,
+            fields: []
+          }
+        })
+      },
+
+      // for this example, we’re doing single-part PUTs
+      shouldUseMultipart (file) {
+        return false
+      }
     })
 
-    uppy.on('complete', (result) => {
-      console.log('Upload complete! Files:', result.successful)
-      alert(`${result.successful.length} file(s) uploaded successfully.`)
+    // 4. Event Logging
+    uppy.on('upload-error', (file, err) => {
+      console.error('Error uploading ‘' + file.name + '’:', err)
     })
 
-    uppy.on('error', (error) => {
-      console.error('Uppy error:', error)
-      alert('Something went wrong during upload.')
+    uppy.on('complete', result => {
+      console.log('Upload complete! Successfully uploaded:', result.successful)
+      alert(`Uploaded ${result.successful.length} files!`)
     })
   </script>
 </body>
