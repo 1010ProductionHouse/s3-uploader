@@ -5,21 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Uppy File Uploader</title>
 
-    <!-- Uppy CSS -->
-    <link
-      rel="stylesheet"
-      href="https://releases.transloadit.com/uppy/v3.6.0/uppy.min.css"
-    />
-  </head>
+   <!-- Uppy CSS -->
+<link href="https://releases.transloadit.com/uppy/v3.4.1/uppy.min.css" rel="stylesheet">
 
-  <body>
-    <div id="drag-drop-area"></div>
+<!-- Uppy JS Bundle -->
+<script src="https://releases.transloadit.com/uppy/v3.4.1/uppy.min.js"></script>
 
-    <!-- Uppy JS -->
-    <script type="module">
-  import Uppy from 'https://cdn.jsdelivr.net/npm/@uppy/core@3.4.1/dist/uppy.min.mjs';
-
-  const uppy = new Uppy.Uppy({
+<script>
+  const uppy = Uppy.Core({
     debug: true,
     autoProceed: false,
   });
@@ -31,20 +24,11 @@
     proudlyDisplayPoweredByUppy: false,
   });
 
-  uppy.on('file-added', (file) => {
-    console.log('File added:', file.name);
-  });
-
   uppy.on('upload', async () => {
-    for (const fileID of uppy.getFiles().map(f => f.id)) {
-      const file = uppy.getFile(fileID);
-
-      // 🔗 Step 1: Get presigned URL
+    for (const file of uppy.getFiles()) {
       const response = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           filename: file.name,
           filetype: file.type
@@ -52,21 +36,17 @@
       });
 
       const { uploadUrl, key } = await response.json();
-      console.log('Presigned URL received for', file.name, key);
 
-      // 🛫 Step 2: Upload to S3
       const upload = await fetch(uploadUrl, {
         method: 'PUT',
-        headers: {
-          'Content-Type': file.type
-        },
+        headers: { 'Content-Type': file.type },
         body: file.data
       });
 
       if (upload.ok) {
-        console.log(`✅ ${file.name} uploaded successfully to S3`);
+        console.log(`✅ ${file.name} uploaded to S3`);
       } else {
-        console.error(`❌ ${file.name} failed to upload`, await upload.text());
+        console.error(`❌ ${file.name} failed`, await upload.text());
       }
     }
 
