@@ -1,52 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Uppy File Upload Demo</title>
-
-    <!-- ✅ Uppy CSS loads first -->
-    <link
-      rel="stylesheet"
-      href="https://releases.transloadit.com/uppy/v3.6.0/uppy.min.css"
-    />
+    <link rel="stylesheet" href="https://releases.transloadit.com/uppy/v3.6.0/uppy.min.css" />
   </head>
-
   <body>
     <div id="drag-drop-area"></div>
 
-    <!-- ✅ Uppy JS — must load BEFORE your script block -->
     <script src="https://releases.transloadit.com/uppy/v3.6.0/uppy.min.js"></script>
-
-    <!-- ✅ Inline script with correct constructor, no type="module" -->
     <script>
-      console.log('🔍 typeof Uppy:', typeof Uppy); // Should be 'function'
-
-      const uppy = new Uppy({
-        autoProceed: false,
-        restrictions: {
-          maxFileSize: 10 * 1024 * 1024, // 10 MB
-          maxNumberOfFiles: 5,
-          allowedFileTypes: ['image/*', 'video/*']
-        }
-      });
-
-      uppy.use(Uppy.Dashboard, {
-        inline: true,
-        target: '#drag-drop-area',
-        showProgressDetails: true
-      });
-
-      uppy.use(Uppy.XHRUpload, {
-        endpoint: 'https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/',
-        fieldName: 'files',
-        formData: true
-      });
-
-      uppy.on('complete', (result) => {
-        console.log('✅ Upload complete:', result.successful);
-        alert('Upload complete! Check console for file info.');
-      });
+      console.log('typeof Uppy:', typeof Uppy);
+      const uppy = new Uppy();
+      console.log('Uppy instance:', uppy);
     </script>
   </body>
 </html>
