@@ -1,88 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Uploader UX Upgrade</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1010 S3 Uploader</title>
 
-  <!-- Google Maps with async loading -->
-  <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD9LNYKrLxCNV_u4sI6PNjBy8eKqIjjfM0&libraries=places&loading=async"
-    async
-    defer
-  ></script>
-
-  <!-- Uppy CDN -->
-  <script src="https://releases.transloadit.com/uppy/v3.15.0/uppy.min.js"></script>
+  <!-- ✅ Load Uppy via UMD CDN -->
+  <script src="https://releases.transloadit.com/uppy/v3.15.0/uppy.umd.min.js"></script>
   <link href="https://releases.transloadit.com/uppy/v3.15.0/uppy.min.css" rel="stylesheet">
-
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    #uploadStatus { margin-top: 10px; white-space: pre-line; }
-    #uploadBtn { margin-top: 20px; }
-  </style>
 </head>
 <body>
-
-  <h2>File Uploader</h2>
-  <div id="uppy"></div>
-  <button id="uploadBtn" disabled>Upload</button>
-  <div id="uploadStatus">🔴 No files selected</div>
+  <h1>Upload Your Files to S3</h1>
+  <div id="drag-drop-area"></div>
 
   <script>
-    const uppy = new window.Uppy({ debug: true, autoProceed: false })
+    const uppy = new window.Uppy({ debug: true, autoProceed: false });
+
+    uppy
       .use(Uppy.Dashboard, {
         inline: true,
-        target: '#uppy',
-        showProgressDetails: true,
-        note: 'Select files to upload to S3'
+        target: '#drag-drop-area',
+        showProgressDetails: true
       })
       .use(Uppy.XHRUpload, {
-        endpoint: 'https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/',
+        // ✅ Replace with your actual Lambda endpoint
+        endpoint: 'https://8nnk3hlgf0.execute-api.us-west-2.amazonaws.com/dev/upload',
         fieldName: 'file',
-        bundle: false
+        formData: true
       });
 
-    const statusDiv = document.getElementById('uploadStatus');
-    const uploadBtn = document.getElementById('uploadBtn');
-
-    function displayStatus(message, isError = false) {
-      statusDiv.textContent = message;
-      statusDiv.style.color = isError ? 'red' : 'green';
-    }
-
-    function updateReadyState() {
-      const files = uppy.getFiles();
-      if (files.length > 0) {
-        displayStatus(`🟢 Ready to upload ${files.length} file(s)`);
-        uploadBtn.disabled = false;
-      } else {
-        displayStatus('🔴 No files selected', true);
-        uploadBtn.disabled = true;
-      }
-    }
-
-    uppy.on('file-added', updateReadyState);
-    uppy.on('file-removed', updateReadyState);
-
-    uploadBtn.addEventListener('click', () => {
-      uploadBtn.disabled = true;
-      displayStatus('⏳ Uploading files...');
-      let successCount = 0;
-      let failList = [];
-
-      uppy.upload().then((result) => {
-        result.successful.forEach(file => successCount++);
-        result.failed.forEach(file => failList.push(file.name));
-
-        let message = `✅ Uploaded ${successCount} file(s) successfully`;
-        if (failList.length) {
-          message += `\n❌ Failed: ${failList.join(', ')}`;
-        }
-        displayStatus(message);
-        updateReadyState(); // Recheck in case user wants another batch
-      });
+    uppy.on('complete', (result) => {
+      console.log('✅ Upload complete! Files:', result.successful);
     });
   </script>
-
 </body>
 </html>
