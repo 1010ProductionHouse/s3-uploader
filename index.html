@@ -1,34 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Uppy → AWS S3 Demo</title>
-  
- ```html
-<link
-  href="https://cdn.skypack.dev/@uppy/core@2.0.2/dist/style.css"
-  rel="stylesheet"
-/>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Uppy File Uploader</title>
 
-</head>
-<body>
-  <h2>Drag & Drop Files to Upload</h2>
-  <div id="drag-drop-area"></div>
+    <!-- Core CSS -->
+    <link
+      href="https://cdn.skypack.dev/@uppy/core@2.0.2/dist/style.css"
+      rel="stylesheet"
+    />
 
-<script type="module">
-  import Uppy from 'https://cdn.skypack.dev/@uppy/core@4.4.7';
-  import Dashboard from 'https://cdn.skypack.dev/@uppy/dashboard@4.3.4';
-  import Uppy from 'https://cdn.skypack.dev/@uppy/core@2.0.2';
+    <!-- Dashboard CSS -->
+    <link
+      href="https://cdn.skypack.dev/@uppy/dashboard@4.3.4/dist/style.css"
+      rel="stylesheet"
+    />
+  </head>
 
-  const uppy = new Uppy()
-    .use(Dashboard, {
-      inline: true,
-      target: '#drag-drop-area'
-    })
-    .use(AwsS3, {
-      endpoint: '/sign-s3'
-    });
-</script>
-</body>
+  <body>
+    <!-- Container for the drag‐drop area -->
+    <div id="drag-drop-area"></div>
+
+    <script type="module">
+      // Core Uppy library
+      import Uppy from 'https://cdn.skypack.dev/@uppy/core@2.0.2';
+
+      // Dashboard UI plugin
+      import Dashboard from 'https://cdn.skypack.dev/@uppy/dashboard@4.3.4';
+
+      // XHRUpload plugin for file transport
+      import XHRUpload from 'https://cdn.jsdelivr.net/npm/@uppy/xhr-upload@2.1.0/dist/uppy.xhr-upload.min.mjs';
+
+      // Initialize Uppy
+      const uppy = new Uppy({
+        restrictions: {
+          maxFileSize: 10 * 1024 * 1024, // 10 MB
+          maxNumberOfFiles: 5,
+          allowedFileTypes: ['image/*', 'video/*']
+        },
+        autoProceed: true
+      });
+
+      // Attach the Dashboard UI
+      uppy.use(Dashboard, {
+        inline: true,
+        target: '#drag-drop-area',
+        showProgressDetails: true
+      });
+
+      // Configure upload endpoint
+      uppy.use(XHRUpload, {
+        endpoint: '/upload',     // ← your server/Lambda endpoint
+        fieldName: 'files',      // form field name for uploaded files
+        formData: true
+      });
+
+      // Listen for completion
+      uppy.on('complete', (result) => {
+        console.log('Upload complete! Successful files:', result.successful);
+      });
+    </script>
+  </body>
 </html>
