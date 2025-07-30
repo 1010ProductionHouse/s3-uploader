@@ -5,60 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>1010 S3 Uploader</title>
 
-  <!-- ✅ Uppy Scripts: CORB-safe via jsDelivr -->
-  <script src="https://cdn.jsdelivr.net/npm/@uppy/core@3.15.0/dist/uppy.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@uppy/dashboard@3.15.0/dist/uppy.dashboard.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@uppy/xhr-upload@3.15.0/dist/uppy.xhr-upload.min.js"></script>
-
-  <!-- ✅ Uppy Styles: matching versions, CORB-safe -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uppy/core@3.15.0/dist/style.min.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uppy/dashboard@3.15.0/dist/style.min.css" />
+  <!-- ✅ Uppy Bundle: Includes core, plugins, and styles -->
+  <script src="https://releases.transloadit.com/uppy/v3.15.0/uppy.min.js"></script>
+  <link href="https://releases.transloadit.com/uppy/v3.15.0/uppy.min.css" rel="stylesheet">
 </head>
+
 <body>
-  <h1>Upload Your Files to S3</h1>
   <div id="drag-drop-area"></div>
-  <div id="upload-summary" style="margin-top: 20px; font-family: sans-serif;"></div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // ✅ Defensive check against script load failure
-      if (typeof window.Uppy !== 'function') {
-        console.error('❌ window.Uppy is not a constructor.');
-        document.getElementById('upload-summary').innerHTML =
-          '<p style="color: red;">Uploader failed to initialize. Please refresh or contact support.</p>';
-        return;
-      }
+    const uppy = new Uppy.Uppy({
+      debug: true,
+      autoProceed: false
+    });
 
-      const uppy = new window.Uppy({ debug: true, autoProceed: false });
+    uppy.use(Uppy.Dashboard, {
+      inline: true,
+      target: '#drag-drop-area',
+      showProgressDetails: true
+    });
 
-      uppy
-        .use(window.Uppy.Dashboard, {
-          inline: true,
-          target: '#drag-drop-area',
-          showProgressDetails: true
-        })
-        .use(window.Uppy.XHRUpload, {
-          endpoint: 'https://8nnk3hlgf0.execute-api.us-west-2.amazonaws.com/dev/upload',
-          fieldName: 'file',
-          formData: true
-        });
+    uppy.use(Uppy.XHRUpload, {
+      endpoint: 'https://YOUR_LAMBDA_ENDPOINT', // 🔌 Replace with actual Lambda URL
+      fieldName: 'file',
+      bundle: false
+    });
 
-      uppy.on('complete', (result) => {
-        const summary = document.getElementById('upload-summary');
-        if (result.successful.length === 0) {
-          summary.innerHTML = '<strong>No files uploaded.</strong>';
-          return;
-        }
+    uppy.on('complete', (result) => {
+      console.log('Upload complete! ✅ Files:', result.successful);
+      alert('Upload complete!');
+    });
 
-        summary.innerHTML = `
-          <strong>✅ Upload Complete:</strong>
-          <ul>
-            ${result.successful.map(file => `
-              <li>${file.name} – ${(file.size / 1024).toFixed(2)} KB</li>
-            `).join('')}
-          </ul>
-        `;
-      });
+    uppy.on('error', (err) => {
+      console.error('Uppy error 💥', err);
+      alert('Upload failed. Check console for details.');
     });
   </script>
 </body>
