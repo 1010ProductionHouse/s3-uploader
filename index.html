@@ -36,8 +36,12 @@
 
       uppy.use(Uppy.XHRUpload, {
         endpoint: 'https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/',
-        fieldName: 'files',
-        formData: true
+        method: 'POST',
+        bundle: true, // 👈 Key fix: send metadata as JSON
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        formData: false // 👈 Prevents raw multipart/form-data
       });
 
       uppy.on('complete', (result) => {
