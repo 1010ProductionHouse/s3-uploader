@@ -1,21 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Uppy + S3 Uploader</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Uppy File Uploader</title>
 
-    <!-- Uppy Core CSS (jsDelivr always returns Access-Control-Allow-Origin: *) -->
+    <!-- ✅ Uppy Core CSS -->
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@uppy/core@4.3.3/dist/style.min.css"
+      href="https://cdn.jsdelivr.net/npm/@uppy/core@3.6.0/dist/style.min.css"
     />
 
-    <!-- Uppy Dashboard CSS -->
+    <!-- ✅ Uppy Dashboard CSS -->
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@uppy/dashboard@4.3.3/dist/style.min.css"
+      href="https://cdn.jsdelivr.net/npm/@uppy/dashboard@3.6.0/dist/style.min.css"
     />
   </head>
 
@@ -23,33 +22,25 @@
     <div id="drag-drop-area"></div>
 
     <script type="module" crossorigin>
-      // 1) Core
-      import Uppy from 'https://cdn.jsdelivr.net/npm/@uppy/core@4.3.3/dist/uppy.min.mjs';
+      import Uppy from 'https://cdn.jsdelivr.net/npm/@uppy/core@3.6.0/dist/uppy.min.mjs';
+      import Dashboard from 'https://cdn.jsdelivr.net/npm/@uppy/dashboard@3.6.0/dist/uppy.dashboard.min.mjs';
+      import XHRUpload from 'https://cdn.jsdelivr.net/npm/@uppy/xhr-upload@3.6.0/dist/uppy.xhr-upload.min.mjs';
 
-      // 2) Dashboard UI
-      import Dashboard from 'https://cdn.jsdelivr.net/npm/@uppy/dashboard@4.3.3/dist/uppy.dashboard.min.mjs';
-
-      // 3) XHRUpload for your Lambda/API Gateway
-      import XHRUpload from 'https://cdn.jsdelivr.net/npm/@uppy/xhr-upload@4.3.3/dist/uppy.xhr-upload.min.mjs';
-
-      // Initialize
       const uppy = new Uppy({
+        autoProceed: true,
         restrictions: {
           maxFileSize: 10 * 1024 * 1024,
           maxNumberOfFiles: 5,
           allowedFileTypes: ['image/*', 'video/*']
-        },
-        autoProceed: true
+        }
       });
 
-      // Mount Dashboard
       uppy.use(Dashboard, {
         inline: true,
         target: '#drag-drop-area',
         showProgressDetails: true
       });
 
-      // Point to your real Lambda URL here
       uppy.use(XHRUpload, {
         endpoint: 'https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/',
         fieldName: 'files',
@@ -57,7 +48,7 @@
       });
 
       uppy.on('complete', (result) => {
-        console.log('Upload complete!:', result.successful);
+        console.log('Upload complete!', result.successful);
       });
     </script>
   </body>
