@@ -5,9 +5,9 @@
   <title>Upload Your Files to S3</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Uppy Full Bundle -->
-  <script src="https://cdn.jsdelivr.net/npm/@uppy/uppy@3.6.1/dist/uppy.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uppy/uppy@3.6.1/dist/uppy.min.css" />
+  <!-- ✅ CORB-safe Uppy Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/@uppy/uppy@3.4.1/dist/uppy.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uppy/uppy@3.4.1/dist/uppy.min.css" />
 
   <style>
     body {
@@ -43,7 +43,7 @@
     })
 
     uppy.on('complete', (result) => {
-      console.log('Upload complete! 🎉', result)
+      console.log('✅ Upload complete:', result.successful)
       alert(`${result.successful.length} file(s) uploaded successfully.`)
     })
   </script>
