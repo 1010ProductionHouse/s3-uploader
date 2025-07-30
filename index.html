@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>1010 S3 Uploader</title>
 
-  <!-- ✅ Load Uppy from jsDelivr -->
+  <!-- ✅ Uppy Scripts: CORB-safe via jsDelivr -->
   <script src="https://cdn.jsdelivr.net/npm/@uppy/core@3.15.0/dist/uppy.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@uppy/dashboard@3.15.0/dist/uppy.dashboard.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@uppy/xhr-upload@3.15.0/dist/uppy.xhr-upload.min.js"></script>
 
+  <!-- ✅ Uppy Styles: matching versions, CORB-safe -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uppy/core@3.15.0/dist/style.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uppy/dashboard@3.15.0/dist/style.min.css" />
 </head>
@@ -20,9 +21,11 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // ✅ Defensive check against script load failure
       if (typeof window.Uppy !== 'function') {
         console.error('❌ window.Uppy is not a constructor.');
-        document.body.innerHTML += '<p style="color: red;">Uploader failed to initialize. Please try a hard refresh or contact support.</p>';
+        document.getElementById('upload-summary').innerHTML =
+          '<p style="color: red;">Uploader failed to initialize. Please refresh or contact support.</p>';
         return;
       }
 
