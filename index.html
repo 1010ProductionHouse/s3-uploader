@@ -2,64 +2,77 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="X-UA-Compatible"
+      content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0" />
     <title>Uppy File Uploader</title>
 
-    <!-- Core CSS -->
+    <!-- Core CSS (any CDN works, this is jsDelivr for CSS) -->
     <link
-      href="https://cdn.skypack.dev/@uppy/core@2.0.2/dist/style.css"
       rel="stylesheet"
-    />
+      href="https://cdn.jsdelivr.net/npm/@uppy/core@4.4.4/dist/style.min.css" />
 
     <!-- Dashboard CSS -->
     <link
-      href="https://cdn.skypack.dev/@uppy/dashboard@4.3.4/dist/style.css"
       rel="stylesheet"
-    />
+      href="https://cdn.jsdelivr.net/npm/@uppy/dashboard@4.5.0/dist/style.min.css" />
+
+    <!-- StatusBar CSS (optional) -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@uppy/status-bar@1.2.0/dist/style.min.css" />
   </head>
 
   <body>
-    <!-- Container for the drag‐drop area -->
     <div id="drag-drop-area"></div>
 
     <script type="module">
-      // Core Uppy library
-      import Uppy from 'https://cdn.skypack.dev/@uppy/core@2.0.2';
+      // 1) Core orchestrator
+      import Uppy from 'https://cdn.jsdelivr.net/npm/@uppy/core@4.4.4/dist/uppy.min.mjs';
 
-      // Dashboard UI plugin
-      import Dashboard from 'https://cdn.skypack.dev/@uppy/dashboard@4.3.4';
+      // 2) Dashboard UI
+      import Dashboard from 'https://cdn.jsdelivr.net/npm/@uppy/dashboard@4.5.0/dist/uppy.dashboard.min.mjs';
 
-      // XHRUpload plugin for file transport
-      import XHRUpload from 'https://cdn.skypack.dev/@uppy/xhr-upload@4.3.3';
+      // 3) Status bar (if you want that upload‐progress bar at the bottom)
+      import StatusBar from 'https://cdn.jsdelivr.net/npm/@uppy/status-bar@1.2.0/dist/uppy.status-bar.min.mjs';
 
-      // Initialize Uppy
+      // 4) XHR transport
+      import XHRUpload from 'https://cdn.jsdelivr.net/npm/@uppy/xhr-upload@4.3.3/dist/uppy.xhr-upload.min.mjs';
+
       const uppy = new Uppy({
         restrictions: {
-          maxFileSize: 10 * 1024 * 1024, // 10 MB
+          maxFileSize: 10 * 1024 * 1024,
           maxNumberOfFiles: 5,
           allowedFileTypes: ['image/*', 'video/*']
         },
         autoProceed: true
       });
 
-      // Attach the Dashboard UI
+      // insert Dashboard
       uppy.use(Dashboard, {
         inline: true,
         target: '#drag-drop-area',
         showProgressDetails: true
       });
 
-      // Configure upload endpoint
+      // insert Status Bar at the bottom of the Dashboard
+      uppy.use(StatusBar, {
+        target: 'body',
+        showProgressDetails: true
+      });
+
+      // configure your Lambda/API endpoint
       uppy.use(XHRUpload, {
-        endpoint: 'https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/',     // ← your server/Lambda endpoint
-        fieldName: 'files',      // form field name for uploaded files
+        endpoint: 'https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/',
+        fieldName: 'files',
         formData: true
       });
 
-      // Listen for completion
-      uppy.on('complete', (result) => {
-        console.log('Upload complete! Successful files:', result.successful);
+      uppy.on('complete', result => {
+        console.log('Upload complete!', result.successful);
       });
     </script>
   </body>
