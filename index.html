@@ -2,12 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Uppy Diagnostic Upload</title>
+  <title>Upload Your Files to S3</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- ✅ CORB-safe Uppy v3.5.0 Bundle via jsDelivr -->
-  <script src="https://cdn.jsdelivr.net/npm/@uppy/uppy@3.5.0/dist/uppy.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uppy/uppy@3.5.0/dist/uppy.min.css" />
+  <!-- ✅ Modular Uppy v3.5.0 components -->
+  <script src="https://cdn.jsdelivr.net/npm/@uppy/core@3.5.0/dist/uppy.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@uppy/dashboard@3.5.0/dist/uppy.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@uppy/xhr-upload@3.5.0/dist/uppy.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uppy/dashboard@3.5.0/dist/uppy.min.css" />
 
   <style>
     body {
@@ -17,54 +19,35 @@
     #drag-drop-area {
       margin-top: 2em;
     }
-    #status {
-      margin-top: 1em;
-      color: #333;
-      font-weight: bold;
-    }
   </style>
 </head>
 <body>
-  <h2>Uppy Diagnostic Upload</h2>
+  <h2>Upload Your Files to S3</h2>
   <div id="drag-drop-area"></div>
-  <div id="status">🔍 Status: Waiting for Uppy to load...</div>
 
   <script>
-    // Confirm Uppy is defined
-    if (typeof Uppy === 'undefined') {
-      document.getElementById('status').textContent = '❌ Uppy is not defined. Script may have failed to load.';
-      console.error('Uppy is undefined. Check if the script was blocked or failed to load.');
-    } else {
-      document.getElementById('status').textContent = '✅ Uppy loaded successfully. Initializing...';
+    const uppy = new Uppy.Uppy({
+      debug: true,
+      autoProceed: false
+    })
 
-      const uppy = new Uppy.Core({
-        debug: true,
-        autoProceed: false
-      })
+    uppy.use(Uppy.Dashboard, {
+      inline: true,
+      target: '#drag-drop-area',
+      showProgressDetails: true
+    })
 
-      uppy.use(Uppy.Dashboard, {
-        inline: true,
-        target: '#drag-drop-area',
-        showProgressDetails: true
-      })
+    uppy.use(Uppy.XHRUpload, {
+      endpoint: 'https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/',
+      fieldName: 'file',
+      formData: true,
+      bundle: true
+    })
 
-      uppy.use(Uppy.XHRUpload, {
-        endpoint: 'https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/',
-        fieldName: 'file',
-        formData: true,
-        bundle: true
-      })
-
-      uppy.on('complete', (result) => {
-        console.log('✅ Upload complete:', result.successful)
-        document.getElementById('status').textContent = `${result.successful.length} file(s) uploaded successfully.`
-      })
-
-      uppy.on('error', (error) => {
-        console.error('❌ Uppy error:', error)
-        document.getElementById('status').textContent = '❌ Upload failed. Check console for details.'
-      })
-    }
+    uppy.on('complete', (result) => {
+      console.log('✅ Upload complete:', result.successful)
+      alert(`${result.successful.length} file(s) uploaded successfully.`)
+    })
   </script>
 </body>
 </html>
