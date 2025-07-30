@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Uppy File Uploader</title>
+    <title>Uppy File Upload Demo</title>
 
-    <!-- ✅ Uppy CSS -->
+    <!-- ✅ Uppy CSS loads first -->
     <link
       rel="stylesheet"
       href="https://releases.transloadit.com/uppy/v3.6.0/uppy.min.css"
@@ -15,15 +15,17 @@
   <body>
     <div id="drag-drop-area"></div>
 
-    <!-- ✅ Uppy JS -->
+    <!-- ✅ Uppy JS — must load BEFORE your script block -->
     <script src="https://releases.transloadit.com/uppy/v3.6.0/uppy.min.js"></script>
 
+    <!-- ✅ Inline script with correct constructor, no type="module" -->
     <script>
-      // ✅ Correct constructor — no .Core
+      console.log('🔍 typeof Uppy:', typeof Uppy); // Should be 'function'
+
       const uppy = new Uppy({
-        autoProceed: true,
+        autoProceed: false,
         restrictions: {
-          maxFileSize: 10 * 1024 * 1024,
+          maxFileSize: 10 * 1024 * 1024, // 10 MB
           maxNumberOfFiles: 5,
           allowedFileTypes: ['image/*', 'video/*']
         }
@@ -42,7 +44,8 @@
       });
 
       uppy.on('complete', (result) => {
-        console.log('✅ Upload complete!', result.successful);
+        console.log('✅ Upload complete:', result.successful);
+        alert('Upload complete! Check console for file info.');
       });
     </script>
   </body>
