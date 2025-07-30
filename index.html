@@ -1,106 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>10|10 File Uploader – Admin</title>
-  <script src="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.js"></script>
-  <link href="https://releases.transloadit.com/uppy/v3.13.0/uppy.min.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>Uploader UX Upgrade</title>
+  <script src="https://releases.transloadit.com/uppy/v3.15.0/uppy.min.js"></script>
+  <link href="https://releases.transloadit.com/uppy/v3.15.0/uppy.min.css" rel="stylesheet">
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
-    #status { margin-top: 15px; font-weight: bold; }
-    #upload-btn {
-      padding: 10px 20px;
-      margin-top: 20px;
-      font-size: 16px;
-      background-color: #333;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    #upload-btn:disabled {
-      background-color: #888;
-      cursor: not-allowed;
-    }
+    #uploadStatus { margin-top: 10px; white-space: pre-line; }
+    #uploadBtn { margin-top: 20px; }
   </style>
 </head>
 <body>
 
-  <h1>Upload Files to Admin Folder</h1>
-  <div id="drag-drop-area"></div>
-  <button id="upload-btn">Upload</button>
-  <div id="status"></div>
+  <h2>File Uploader</h2>
+  <div id="uppy"></div>
+  <button id="uploadBtn" disabled>Upload</button>
+  <div id="uploadStatus">🔴 No files selected</div>
 
   <script>
-    const getUsername = () => 'Admin';
+    const uppy = new Uppy.Core({ debug: true, autoProceed: false })
+      .use(Uppy.Dashboard, {
+        inline: true,
+        target: '#uppy',
+        showProgressDetails: true,
+        note: 'Select files to upload to S3'
+      })
+      .use(Uppy.XHRUpload, {
+        endpoint: 'YOUR_LAMBDA_ENDPOINT_HERE',
+        fieldName: 'file',
+        bundle: false
+      });
 
-    const displayStatus = (message, isError = false) => {
-      const status = document.getElementById('status');
-      status.textContent = message;
-      status.style.color = isError ? 'red' : 'green';
-    };
+    const statusDiv = document.getElementById('uploadStatus');
+    const uploadBtn = document.getElementById('uploadBtn');
 
-    const uppy = new Uppy.Uppy({
-      restrictions: { maxNumberOfFiles: 5 },
-      autoProceed: false
-    });
+    function displayStatus(message, isError = false) {
+      statusDiv.textContent = message;
+      statusDiv.style.color = isError ? 'red' : 'green';
+    }
 
-    uppy.use(Uppy.DragDrop, { target: '#drag-drop-area' });
-    uppy.use(Uppy.StatusBar, {
-      target: 'body',
-      showProgressDetails: true,
-      hideUploadButton: true
-    });
-    uppy.use(Uppy.Informer, { target: 'body' });
-    uppy.use(Uppy.ProgressBar, {
-      target: 'body',
-      hideAfterFinish: true
-    });
-
-    const uploadFile = async (file) => {
-      const username = getUsername();
-
-      try {
-        const lambdaRes = await fetch('https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, filename: file.name })
-        });
-
-        if (!lambdaRes.ok) {
-          const errorText = await lambdaRes.text();
-          throw new Error(`Lambda error: ${errorText}`);
-        }
-
-        const { url: presignedUrl } = await lambdaRes.json();
-
-        const s3Res = await fetch(presignedUrl, {
-          method: 'PUT',
-          headers: { 'Content-Type': file.type },
-          body: file.data
-        });
-
-        if (!s3Res.ok) {
-          const errMsg = await s3Res.text();
-          throw new Error(`S3 upload failed: ${errMsg}`);
-        }
-
-        displayStatus(`✅ Upload successful: ${file.name}`);
-      } catch (err) {
-        console.error(err);
-        displayStatus(`❌ Upload failed: ${file.name}`, true);
-      }
-    };
-
-    document.getElementById('upload-btn').addEventListener('click', () => {
+    function updateReadyState() {
       const files = uppy.getFiles();
-
-      if (files.length === 0) {
-        displayStatus('❌ No files selected', true);
-        return;
+      if (files.length > 0) {
+        displayStatus(`🟢 Ready to upload ${files.length} file(s)`);
+        uploadBtn.disabled = false;
+      } else {
+        displayStatus('🔴 No files selected', true);
+        uploadBtn.disabled = true;
       }
+    }
 
-      Promise.all(files.map(uploadFile));
+    uppy.on('file-added', updateReadyState);
+    uppy.on('file-removed', updateReadyState);
+
+    uploadBtn.addEventListener('click', () => {
+      uploadBtn.disabled = true;
+      displayStatus('⏳ Uploading files...');
+      let successCount = 0;
+      let failList = [];
+
+      uppy.upload().then((result) => {
+        result.successful.forEach(file => successCount++);
+        result.failed.forEach(file => failList.push(file.name));
+
+        let message = `✅ Uploaded ${successCount} file(s) successfully`;
+        if (failList.length) {
+          message += `\n❌ Failed: ${failList.join(', ')}`;
+        }
+        displayStatus(message);
+        updateReadyState(); // Reset button state based on current files
+      });
     });
   </script>
 
