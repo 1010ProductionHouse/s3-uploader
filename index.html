@@ -5,27 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Uppy File Uploader</title>
 
-    <!-- ✅ Uppy Core CSS -->
+    <!-- Uppy Core CSS -->
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@uppy/core@3.6.0/dist/style.min.css"
+      href="https://unpkg.com/@uppy/core@3.6.0/dist/style.min.css"
     />
-    <!-- ✅ Uppy Dashboard CSS -->
+
+    <!-- Uppy Dashboard CSS -->
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@uppy/dashboard@3.6.0/dist/style.min.css"
+      href="https://unpkg.com/@uppy/dashboard@3.6.0/dist/style.min.css"
     />
   </head>
 
   <body>
     <div id="drag-drop-area"></div>
 
-    <!-- ✅ Uppy Core UMD JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@uppy/core@3.6.0/dist/uppy.min.js"></script>
-    <!-- ✅ Uppy Dashboard UMD JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@uppy/dashboard@3.6.0/dist/uppy.dashboard.min.js"></script>
-    <!-- ✅ Uppy XHRUpload UMD JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@uppy/xhr-upload@3.6.0/dist/uppy.xhr-upload.min.js"></script>
+    <!-- Uppy Core JS -->
+    <script src="https://unpkg.com/@uppy/core@3.6.0/dist/uppy.min.js"></script>
+
+    <!-- Uppy Dashboard JS -->
+    <script src="https://unpkg.com/@uppy/dashboard@3.6.0/dist/uppy.dashboard.min.js"></script>
+
+    <!-- Uppy XHRUpload JS -->
+    <script src="https://unpkg.com/@uppy/xhr-upload@3.6.0/dist/uppy.xhr-upload.min.js"></script>
 
     <script>
       const uppy = new Uppy.Core({
