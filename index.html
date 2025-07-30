@@ -1,56 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>1010 S3 Uploader</title>
-
-  <!-- ✅ Load Uppy UMD build -->
+  <meta charset="UTF-8">
+  <title>Uppy Test</title>
   <script src="https://releases.transloadit.com/uppy/v3.15.0/uppy.umd.min.js"></script>
-  <link href="https://releases.transloadit.com/uppy/v3.15.0/uppy.min.css" rel="stylesheet">
 </head>
 <body>
-  <h1>Upload Your Files to S3</h1>
-  <div id="drag-drop-area"></div>
-  <div id="upload-summary" style="margin-top: 20px; font-family: sans-serif;"></div>
-
+  <h1>Testing Uppy Constructor</h1>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      if (typeof window.Uppy !== 'function') {
-        console.error('❌ Uppy is not available. Script may have failed to load.');
-        return;
+      if (typeof window.Uppy === 'function') {
+        console.log('✅ Success: window.Uppy is a constructor');
+        document.body.innerHTML += '<p style="color: green;">Uppy is ready!</p>';
+      } else {
+        console.error('❌ window.Uppy is NOT a constructor');
+        document.body.innerHTML += '<p style="color: red;">Uppy failed to load.</p>';
       }
-
-      const uppy = new window.Uppy({ debug: true, autoProceed: false });
-
-      uppy
-        .use(Uppy.Dashboard, {
-          inline: true,
-          target: '#drag-drop-area',
-          showProgressDetails: true
-        })
-        .use(Uppy.XHRUpload, {
-          endpoint: 'https://8nnk3hlgf0.execute-api.us-west-2.amazonaws.com/dev/upload',
-          fieldName: 'file',
-          formData: true
-        });
-
-      uppy.on('complete', (result) => {
-        const summary = document.getElementById('upload-summary');
-        if (result.successful.length === 0) {
-          summary.innerHTML = '<strong>No files uploaded.</strong>';
-          return;
-        }
-
-        summary.innerHTML = `
-          <strong>✅ Upload Complete:</strong>
-          <ul>
-            ${result.successful.map(file => `
-              <li>${file.name} – ${(file.size / 1024).toFixed(2)} KB</li>
-            `).join('')}
-          </ul>
-        `;
-      });
     });
   </script>
 </body>
