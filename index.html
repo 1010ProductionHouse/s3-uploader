@@ -10,7 +10,6 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@uppy/core@3.6.0/dist/style.min.css"
     />
-
     <!-- ✅ Uppy Dashboard CSS -->
     <link
       rel="stylesheet"
@@ -21,12 +20,15 @@
   <body>
     <div id="drag-drop-area"></div>
 
-    <script type="module" crossorigin>
-      import Uppy from 'https://cdn.jsdelivr.net/npm/@uppy/core@3.6.0/dist/uppy.min.mjs';
-      import Dashboard from 'https://cdn.jsdelivr.net/npm/@uppy/dashboard@3.6.0/dist/uppy.dashboard.min.mjs';
-      import XHRUpload from 'https://cdn.jsdelivr.net/npm/@uppy/xhr-upload@3.6.0/dist/uppy.xhr-upload.min.mjs';
+    <!-- ✅ Uppy Core UMD JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@uppy/core@3.6.0/dist/uppy.min.js"></script>
+    <!-- ✅ Uppy Dashboard UMD JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@uppy/dashboard@3.6.0/dist/uppy.dashboard.min.js"></script>
+    <!-- ✅ Uppy XHRUpload UMD JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@uppy/xhr-upload@3.6.0/dist/uppy.xhr-upload.min.js"></script>
 
-      const uppy = new Uppy({
+    <script>
+      const uppy = new Uppy.Core({
         autoProceed: true,
         restrictions: {
           maxFileSize: 10 * 1024 * 1024,
@@ -35,13 +37,13 @@
         }
       });
 
-      uppy.use(Dashboard, {
+      uppy.use(Uppy.Dashboard, {
         inline: true,
         target: '#drag-drop-area',
         showProgressDetails: true
       });
 
-      uppy.use(XHRUpload, {
+      uppy.use(Uppy.XHRUpload, {
         endpoint: 'https://qfiknfbru7xmrtczcqy2767hju0innfi.lambda-url.us-west-2.on.aws/',
         fieldName: 'files',
         formData: true
