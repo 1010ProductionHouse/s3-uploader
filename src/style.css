@@ -1,0 +1,50 @@
+/* Uploader Container */
+body {
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f6f8fa;
+  color: #333;
+}
+
+h1 {
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 1.75rem;
+  color: #202020;
+}
+
+/* Uppy Dashboard overrides */
+.uppy-Dashboard-inner {
+  max-width: 650px;
+  margin: 0 auto;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Upload Progress & Buttons */
+.uppy-StatusBar {
+  border-top: 1px solid #ddd;
+}
+
+.uppy-Dashboard-AddFiles {
+  background-color: #3b82f6;
+  color: #fff;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* File preview thumbnails */
+.uppy-Thumbnail {
+  border-radius: 4px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.25rem;
+  }
+  .uppy-Dashboard-inner {
+    max-width: 95%;
+  }
+}
