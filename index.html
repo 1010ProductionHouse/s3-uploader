@@ -1,39 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Uppy S3 Direct Upload Test</title>
-  <!-- Your bundled Uppy styles -->
-  <link rel="stylesheet" href="./dist/uppy.bundle.css">
-  <style>
-    /* Optional: center the uploader on the page */
-    body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-    #drag-drop-area { width: 80%; max-width: 600px; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1010 S3 Uploader</title>
+  <link rel="stylesheet" href="https://releases.transloadit.com/uppy/v4.13.0/uppy.min.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Uppy will mount the dashboard here -->
-  <div id="drag-drop-area"></div>
-
-  <!-- Your bundled Uppy code -->
-  <script src="./dist/uppy.bundle.js"></script>
-  <script>
-    // The Uppy instance was assigned to window.uppy in your src/index.js
-    const uppy = window.uppy;
-
-    // Log success and show the S3 key
-    uppy.on('upload-success', (file, response) => {
-      console.log('✔️ Upload successful:', file.name);
-      console.log('S3 Key:', file.meta.s3Key);
-      alert(`Uploaded ${file.name} as ${file.meta.s3Key}`);
-    });
-
-    // Log errors
-    uppy.on('upload-error', (file, error) => {
-      console.error('❌ Upload failed:', file.name, error);
-      alert(`Upload failed: ${error}`);
-    });
-  </script>
+  <h1>Upload Your Files</h1>
+  <div id="uppy-dashboard"></div>
+  <script type="module" src="main.js"></script>
 </body>
 </html>

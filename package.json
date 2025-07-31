@@ -1,0 +1,22 @@
+{
+  "name": "s3-uploader",
+  "version": "1.0.0",
+  "description": "Uppy S3 direct upload via Lambda presigner",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "esbuild src/index.js --bundle --outfile=dist/uppy.bundle.js --minify && copy \"src\\index.css\" \"dist\\uppy.bundle.css\"",
+    "start": "npx http-server . -p 8080",
+    "serve": "npm run build && npm run start"
+  },
+  "author": "1010ProductionHouse",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.25.8",
+    "http-server": "^14.1.1"
+  },
+  "dependencies": {
+    "@uppy/aws-s3": "^4.3.1",
+    "@uppy/core": "^4.5.1",
+    "@uppy/dashboard": "^4.4.1"
+  }
+}
