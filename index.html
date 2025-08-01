@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>1010 S3 Uploader</title>
-  <link rel="stylesheet" href="https://releases.transloadit.com/uppy/v4.13.0/uppy.min.css" />
-  <link rel="stylesheet" href="src/style.css" />
+  <meta charset="UTF-8">
+  <title>1010 Uploader</title>
+  <link rel="stylesheet" href="node_modules/@uppy/core/dist/style.css">
+  <link rel="stylesheet" href="node_modules/@uppy/dashboard/dist/style.css">
 </head>
 <body>
-  <h1>Upload Your Files</h1>
-  <div id="uppy-dashboard"></div>
-  <script type="module" src="src/main.js"></script>
+  <h1>📁 Upload to S3</h1>
+  <!-- Uppy will inject its dashboard here -->
+  <script type="module" src="./src/main.js"></script>
 </body>
 </html>
